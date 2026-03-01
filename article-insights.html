@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Article Insights — CRSCM</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+/* ─── DESIGN TOKENS ─────────────────────────────────────────── */
+:root {
+  --bg:        #0b0f0e;
+  --surface:   #111816;
+  --surface2:  #162119;
+  --border:    rgba(180,220,180,0.10);
+  --border2:   rgba(180,220,180,0.18);
+  --green:     #3ddc84;
+  --green-dim: rgba(61,220,132,0.14);
+  --green-glow:rgba(61,220,132,0.30);
+  --teal:      #2ec4b6;
+  --amber:     #ffbe0b;
+  --amber-dim: rgba(255,190,11,0.12);
+  --rose:      #ff6b9d;
+  --rose-dim:  rgba(255,107,157,0.12);
+  --sky:       #7ecfed;
+  --sky-dim:   rgba(126,207,237,0.12);
+  --text:      #e8f0ec;
+  --text-dim:  rgba(232,240,236,0.50);
+  --text-faint:rgba(232,240,236,0.28);
+  --mono:      'JetBrains Mono', monospace;
+}
+
+/* ─── RESET & BASE ──────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Noise texture overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1000;
+  opacity: 0.6;
+}
+
+/* ─── HEADER ────────────────────────────────────────────────── */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 500;
+  background: rgba(11,15,14,0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--border);
+}
+.header-wrap {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 36px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Animated logo mark */
+.logo-mark {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  position: relative;
+}
+.logo-mark svg {
+  width: 40px;
+  height: 40px;
+}
+.logo-ring {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: drawRing 1.2s ease forwards 0.2s;
+}
+@keyframes drawRing {
+  to { stroke-dashoffset: 0; }
+}
+
+.header-text {
+  display: flex;
+  flex-direction: column;
+}
+.header-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.45rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  line-height: 1;
+}
+.header-sub {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--green);
+  margin-top: 3px;
+  font-weight: 500;
+}
+.header-pill {
+  margin-left: auto;
+  background: var(--green-dim);
+  border: 1px solid rgba(61,220,132,0.25);
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  padding: 4px 14px;
+  border-radius: 20px;
+  letter-spacing: 0.05em;
+}
+
+/* ─── HERO ──────────────────────────────────────────────────── */
+.hero {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 64px 36px 44px;
+  position: relative;
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 500px; height: 300px;
+  background: radial-gradient(ellipse at top right, rgba(61,220,132,0.07) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-eyebrow {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--green);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.hero-eyebrow::before {
+  content: '';
+  display: inline-block;
+  width: 28px;
+  height: 1px;
+  background: var(--green);
+}
+.hero-headline {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.8rem, 5vw, 4.5rem);
+  font-weight: 300;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin-bottom: 18px;
+}
+.hero-headline em {
+  font-style: italic;
+  color: var(--green);
+}
+.hero-desc {
+  font-size: 0.95rem;
+  color: var(--text-dim);
+  line-height: 1.7;
+  max-width: 560px;
+}
+
+/* ─── STATS ROW ─────────────────────────────────────────────── */
+.stats-row {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 36px 40px;
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.stat-chip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: border-color 0.2s;
+}
+.stat-chip:hover { border-color: var(--border2); }
+.stat-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.stat-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1;
+}
+.stat-label {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 2px;
+}
+
+/* ─── CONTROLS ──────────────────────────────────────────────── */
+.controls-outer {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 72px;
+  z-index: 400;
+}
+.controls-wrap {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 14px 36px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Search */
+.search-wrap {
+  flex: 1;
+  min-width: 220px;
+  position: relative;
+}
+.search-wrap svg {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 15px; height: 15px;
+  color: var(--text-faint);
+  pointer-events: none;
+}
+input[type=search] {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border2);
+  border-radius: 9px;
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem;
+  padding: 9px 12px 9px 36px;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+input[type=search]::placeholder { color: var(--text-faint); }
+input[type=search]:focus {
+  border-color: rgba(61,220,132,0.4);
+  background: rgba(61,220,132,0.04);
+}
+
+/* Selects */
+select {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border2);
+  border-radius: 9px;
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.8rem;
+  padding: 9px 30px 9px 12px;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='rgba(232,240,236,0.35)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  transition: border-color 0.2s;
+}
+select:focus { border-color: rgba(61,220,132,0.4); }
+select option { background: #111816; color: var(--text); }
+
+.clear-btn {
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 9px;
+  color: var(--text-dim);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.78rem;
+  padding: 9px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.clear-btn:hover { border-color: var(--rose); color: var(--rose); }
+
+/* ─── MAIN GRID ─────────────────────────────────────────────── */
+main {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 36px 36px 80px;
+}
+.results-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.results-label {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.results-label strong { color: var(--green); }
+
+.card-grid {
+  display: grid;
+  gap: 20px;
+}
+
+/* ─── CARD ──────────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s;
+  animation: riseIn 0.45s cubic-bezier(0.22,1,0.36,1) both;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(61,220,132,0.025) 0%, transparent 60%);
+  pointer-events: none;
+}
+.card:hover {
+  border-color: rgba(61,220,132,0.22);
+  box-shadow: 0 0 0 1px rgba(61,220,132,0.08), 0 20px 60px rgba(0,0,0,0.4);
+  transform: translateY(-3px);
+}
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.99); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Card accent bar at top */
+.card-accent {
+  height: 3px;
+  background: linear-gradient(90deg, var(--green), var(--teal), transparent);
+}
+.card-accent.water-no {
+  background: linear-gradient(90deg, #3a4a44, transparent);
+}
+
+/* Card header */
+.card-head {
+  padding: 24px 28px 20px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  align-items: start;
+  border-bottom: 1px solid var(--border);
+}
+.card-index {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  color: var(--text-faint);
+  letter-spacing: 0.1em;
+  margin-bottom: 10px;
+}
+.card-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.22rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.card-byline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.journal-badge {
+  font-size: 0.7rem;
+  color: var(--teal);
+  background: rgba(46,196,182,0.1);
+  border: 1px solid rgba(46,196,182,0.2);
+  border-radius: 5px;
+  padding: 2px 9px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.date-badge {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--text-faint);
+}
+.doi-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--green-dim);
+  border: 1px solid rgba(61,220,132,0.22);
+  color: var(--green);
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  font-weight: 500;
+  padding: 6px 13px;
+  border-radius: 7px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: background 0.2s, box-shadow 0.2s;
+  white-space: nowrap;
+  align-self: flex-start;
+}
+.doi-link:hover {
+  background: rgba(61,220,132,0.22);
+  box-shadow: 0 0 16px rgba(61,220,132,0.15);
+}
+.doi-link svg { width: 10px; height: 10px; }
+
+/* Card body */
+.card-body {
+  padding: 22px 28px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Abstract ── */
+.abstract-block {
+  position: relative;
+  padding-left: 16px;
+}
+.abstract-block::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--green), transparent);
+  border-radius: 2px;
+}
+.block-label {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--text-faint);
+  margin-bottom: 8px;
+}
+.abstract-text {
+  font-size: 0.875rem;
+  line-height: 1.8;
+  color: rgba(232,240,236,0.72);
+}
+.abstract-text.clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.read-toggle {
+  background: none;
+  border: none;
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  cursor: pointer;
+  padding: 5px 0 0;
+  letter-spacing: 0.06em;
+  display: block;
+  transition: color 0.2s;
+}
+.read-toggle:hover { color: var(--teal); }
+
+/* ── Keywords ── */
+.kw-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.kw { 
+  font-size: 0.71rem;
+  color: var(--amber);
+  background: var(--amber-dim);
+  border: 1px solid rgba(255,190,11,0.18);
+  border-radius: 20px;
+  padding: 3px 11px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+/* ── Data Grid ── */
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+}
+.data-cell {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 11px 14px;
+  transition: border-color 0.2s;
+}
+.data-cell:hover { border-color: var(--border2); }
+.cell-label {
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--text-faint);
+  margin-bottom: 5px;
+}
+.cell-val {
+  font-size: 0.82rem;
+  color: var(--text);
+  line-height: 1.5;
+  font-weight: 400;
+}
+.cell-val.empty {
+  color: var(--text-faint);
+  font-style: italic;
+}
+
+/* Water cells special styling */
+.data-cell.water {
+  border-color: rgba(126,207,237,0.18);
+  background: var(--sky-dim);
+}
+.data-cell.water .cell-label { color: var(--sky); }
+.water-yes-val { color: var(--green); font-weight: 600; }
+.water-no-val { color: var(--text-faint); }
+
+/* ── SC Issue ── */
+.sc-block {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 14px 16px;
+  position: relative;
+  overflow: hidden;
+}
+.sc-block::before {
+  content: 'SC';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 4rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.03);
+  pointer-events: none;
+  line-height: 1;
+}
+.sc-val {
+  font-size: 0.83rem;
+  line-height: 1.65;
+  color: rgba(232,240,236,0.75);
+}
+
+/* ── Methodology ── */
+.method-block {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--rose-dim);
+  border: 1px solid rgba(255,107,157,0.16);
+  border-radius: 9px;
+  padding: 14px 16px;
+}
+.method-icon-wrap {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  background: rgba(255,107,157,0.15);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+.method-block .block-label { color: var(--rose); }
+.method-val {
+  font-size: 0.83rem;
+  color: rgba(255,180,200,0.9);
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+/* ─── NO RESULTS ─────────────────────────────────────────────── */
+.no-results {
+  text-align: center;
+  padding: 100px 20px;
+  color: var(--text-faint);
+  display: none;
+}
+.no-results-icon { font-size: 3rem; margin-bottom: 16px; }
+.no-results h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.8rem;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+/* ─── FOOTER ─────────────────────────────────────────────────── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 32px 36px;
+  text-align: center;
+}
+.footer-inner {
+  max-width: 1320px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.footer-dot {
+  width: 4px; height: 4px;
+  background: var(--green);
+  border-radius: 50%;
+  opacity: 0.5;
+}
+.footer-text {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+/* ─── RESPONSIVE ─────────────────────────────────────────────── */
+@media (max-width: 700px) {
+  .header-wrap, .hero, .stats-row, .controls-wrap, main, footer { padding-left: 18px; padding-right: 18px; }
+  .card-head { grid-template-columns: 1fr; }
+  .doi-link { width: fit-content; }
+  .data-grid { grid-template-columns: 1fr; }
+  .hero-headline { font-size: 2.4rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ────────────────────────────────────────────────── -->
+<header>
+  <div class="header-wrap">
+    <div class="logo-mark">
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="20" cy="20" r="18" stroke="rgba(61,220,132,0.2)" stroke-width="1"/>
+        <circle cx="20" cy="20" r="18" stroke="rgba(61,220,132,0.8)" stroke-width="1.5" stroke-linecap="round" class="logo-ring"/>
+        <polygon points="20,6 32,27 8,27" fill="none" stroke="rgba(61,220,132,0.6)" stroke-width="1.5" stroke-linejoin="round"/>
+        <circle cx="20" cy="20" r="3" fill="#3ddc84"/>
+      </svg>
+    </div>
+    <div class="header-text">
+      <div class="header-title">Article Insights</div>
+      <div class="header-sub">Center for Responsible Supply Chain Management</div>
+    </div>
+    <div class="header-pill" id="headerPill">42 articles</div>
+  </div>
+</header>
+
+<!-- ── HERO ──────────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="hero-eyebrow">Research Repository</div>
+  <h1 class="hero-headline">Supply Chain<br/><em>Research Library</em></h1>
+  <p class="hero-desc">A curated collection of peer-reviewed articles on responsible supply chain management, water governance, humanitarian logistics, and sustainable operations.</p>
+</section>
+
+<!-- ── STATS ──────────────────────────────────────────────────── -->
+<div class="stats-row" id="statsRow"></div>
+
+<!-- ── CONTROLS ──────────────────────────────────────────────── -->
+<div class="controls-outer">
+  <div class="controls-wrap">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="search" id="searchInput" placeholder="Search titles, abstracts, keywords, geography…"/>
+    </div>
+    <select id="filterJournal"><option value="">All Journals</option></select>
+    <select id="filterWater"><option value="">All Articles</option><option value="Yes">Water Central</option><option value="No">Water Not Central</option></select>
+    <select id="filterWaterFocus"><option value="">All Water Focus</option></select>
+    <select id="filterMethod"><option value="">All Methodologies</option></select>
+    <button class="clear-btn" onclick="clearFilters()">Clear filters</button>
+  </div>
+</div>
+
+<!-- ── MAIN ───────────────────────────────────────────────────── -->
+<main>
+  <div class="results-meta">
+    <div class="results-label">Showing <strong id="shownCount">42</strong> of 42 articles</div>
+  </div>
+  <div class="card-grid" id="cardGrid"></div>
+  <div class="no-results" id="noResults">
+    <div class="no-results-icon">◌</div>
+    <h3>No articles found</h3>
+    <p>Try different search terms or clear your filters.</p>
+  </div>
+</main>
+
+<!-- ── FOOTER ─────────────────────────────────────────────────── -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-dot"></div>
+    <div class="footer-text">Center for Responsible Supply Chain Management</div>
+    <div class="footer-dot"></div>
+    <div class="footer-text">Article Insights Portal</div>
+    <div class="footer-dot"></div>
+  </div>
+</footer>
+
+<script>
+const DATA = [{"idx": 1, "doi": "https://doi.org/10.1177/10591478231224929", "journal": "Production and Operations Management", "date": "January-2024", "title": "Reducing Industrial Water Consumption: The Impact of Organizational Learning", "abstract": "Using factory-level data from a large multinational manufacturer, we examine the effects of both organizational experience and knowledge transfer on an increasingly critical environmental performance measure, the consumption of water required for manufacturing. We estimate the direct effects on water consumption from in-factory cumulative production experience and the vicarious learning from peer factories in the same product category. We consider vicarious learning from three potential sources: observation of peer factories’ cumulative production experience; and benchmarking of water consumption performance with the best and worst performing peer factories. For each learning channel, we test for the moderating effects of water scarcity and geographic proximity. We find that factories learn to reduce their water consumption from their own experience but at a greater rate in water-scarce locations. Although we find that factories learn significantly from observing the cumulative production experience of peer factories, this effect does not hold in water-scarce locations or across geographic regions. We document that learning effects from observing others’ experience are quite distinct from learning effects by benchmarking others’ performance. We find vicarious learning effects from benchmarking the best-performing peer factories result in significant reductions in water consumption, and this effect is greater when the factory is in a water-scarce location, and when benchmarking other regions rather than within the same region. Finally, we find less significant vicarious learning from observing the worst-performing factories.", "keywords": "Water consumption; water scarcity; learning curves; experience curves; vicarious learning; sustainability", "geography": "Global (multinational manufacturing network across regions)", "industry": "Consumer Packaged Goods (CPG) manufacturing; Fortune 500 multinational producer", "decisionMaker": "Factory managers within a matrix structure reporting to regional and product-category managers", "scIssue": "The study examines how manufacturing factories reduce water consumption per unit of production through experiential and vicarious organizational learning mechanisms. It analytically evaluates how cumulative production experience, peer benchmarking, water scarcity, and geographic proximity shape environmental performance improvements in industrial water use.", "waterCentral": "Yes", "waterFocus": "Water as an Embedded Input", "methodology": "Empirical Analysis (gathered data)"}, {"idx": 2, "doi": "https://doi.org/10.1111/poms.13923", "journal": "Production and Operations Management", "date": "30-October-2022", "title": "Water Stress: Opportunities for Supply Chain Research", "abstract": "Driven by climate change and overuse, water stress is a worsening sustainability concern that threatens businesses and communities across the globe. Leading global organizations such as the United Nations have expressed an urgent need for sustainable water management strategies across nations and economies. Yet, the field of supply chain management does not have a substantial research stream related to water. A key challenge is the lack of a persuasive organizing framework within this setting. This study presents a systematic literature review of water stress from a supply chain perspective. Literature spanning over two decades across an array of journals is synthesized into an overarching framework that organizes topics related to water. Challenges firms face due to operational and contextual water risks are presented. Based on the proposed framework, research gaps for further exploration of the relationship between supply chains and water stress are suggested.", "keywords": "Analytics; narrative review; supply chain; sustainability; water stress", "geography": "Global", "industry": "Cross-industry supply chains and operations management; sustainability and water stress governance", "decisionMaker": "Firm managers, supply chain managers, and community-level policymakers influencing water allocation and regulation", "scIssue": "The article examines how water stress generates operational and contextual risks across firms and interconnected supply chains. It analytically develops an organizing framework to understand firm-, supply chain-, and community-level responses to water scarcity, regulation, and virtual water transfers.", "waterCentral": "Yes", "waterFocus": "Water Risk, Governance & Coordination", "methodology": "Empirical Analysis (gathered data)"}, {"idx": 3, "doi": "https://doi.org/10.1111/poms.13848", "journal": "Production and Operations Management", "date": "01-May-2022", "title": "Sustainable humanitarian operations: An integrated perspective", "abstract": "The immediate response to disasters, while well intended, sometimes causes avoidable humanitarian challenges later on. Drinking water may be essential, but it is not necessary to provide it in small plastic bottles. Injections may save lives, but inappropriately discarded syringes are hazardous. Can humanitarian relief be made more sustainable? This paper summarizes a 1-day workshop on this topic, held at INSEAD in 2019 in connection with Luk Van Wassenhove’s transition to emeritus professor. This workshop involved over 100 academics and practitioners. Five areas were discussed in detail: material convergence, coordination between humanitarian organizations (HOs), logistics, partnerships with industry, and health. The discussions demonstrate the possibility of better integrating sustainability with humanitarian operations despite the inherent tension between the immediate need to save lives and the longer term perspective associated with sustainability. This requires that various stakeholders, including HOs, donors, and watchdog organizations, think differently about the balance between short-term and long-term interventions, the metrics and incentives they apply, and the role of local versus global organizations. Leading practitioners and scholars in humanitarian operations are well aware of these challenges and opportunities in each domain separately; this paper aims to introduce these issues to a broader audience in a single more integrated overview, based on the themes that were discussed at the workshop.", "keywords": "coordination; disaster management; health; humanitarian operations; logistics; material convergence; partnerships; sustainable operations; workshop", "geography": "Global (multi-country disaster contexts)", "industry": "Humanitarian operations and disaster management across preparedness, response, rehabilitation, and mitigation", "decisionMaker": "Humanitarian organization leaders, logistics managers, donors, industry partners, local NGOs, and policymakers", "scIssue": "The paper examines how disaster response supply chains generate unintended environmental, social, and coordination inefficiencies across material convergence, logistics, partnerships, and health operations. It analytically highlights structural trade-offs between short-term life-saving actions and long-term sustainability across global–local coordination and incentive systems.", "waterCentral": "No", "waterFocus": "Water as an Enabler of Use", "methodology": "Case Study"}, {"idx": 4, "doi": "https://doi.org/10.1287/msom.2022.0318", "journal": "Manufacturing & Service Operations Management", "date": "09-June-2025", "title": "Optimal Policy for Inventory Management with Periodic and Controlled Resets", "abstract": "Problem definition: Inventory management problems with periodic and controllable resets occur in the context of managing water storage in the developing world and dynamically optimizing endcap promotion duration in retail outlets. In this paper, we consider a set of sequential decision problems in which the decision maker must not only balance holding and shortage costs but discard all inventory before a fixed number of decision epochs with the option for an early inventory reset. Methodology/results: Finding optimal policies for these problems through dynamic programming presents unique challenges because of the nonconvex nature of the resulting value functions. Moreover, this structure cannot be readily analyzed even with extended convexity definitions, such as K-convexity. Managerial implications: Our key contribution is to present sufficient conditions that ensure the optimal policy has an easily interpretable structure, which generalizes the well-known (s,S) policy from the operations management literature. Furthermore, we demonstrate that, under these rather mild conditions, the optimal policy exhibits a four-threshold structure. We then conclude with computational experiments, thereby illustrating the policy structures that can be extracted in various inventory management scenarios.", "keywords": "supply chain management; inventory theory and control; dynamic programming; healthcare management; humanitarian operations", "geography": "Not explicitly stated in the paper", "industry": "Inventory management with perishable or aging goods; water storage systems in developing regions; retail endcap promotion management", "decisionMaker": "Inventory managers; water storage decision makers; retail supply chain managers", "scIssue": "The study analyzes inventory systems in which entire stock must be periodically or strategically reset due to perishability, contamination risk, or product switching constraints. It analytically characterizes optimal reset-and-reorder thresholds that generalize the classical (s,S) policy under nonconvex dynamic conditions.", "waterCentral": "No", "waterFocus": "Water as an Embedded Input", "methodology": "Analytical Model; Empirical Analysis (gathered data)"}, {"idx": 5, "doi": "http://dx.doi.org/10.1287/msom.2015.0536", "journal": "Manufacturing & Service Operations Management", "date": "05-June-2015", "title": "Capacity Investment in Renewable Energy Technology with Supply Intermittency: Data Granularity Matters!", "abstract": "We study an organization’s one-time capacity investment in a renewable energy-producing technology with supply intermittency and net metering compensation. The renewable technology can be coupled with conventional technologies to form a capacity portfolio that is used to meet stochastic demand for energy. The technologies have different initial investments and operating costs, and the operating costs follow different stochastic processes. We show how to reduce this problem to a single-period decision problem and how to estimate the joint distribution of the stochastic factors using historical data. Importantly, we show that data granularity for renewable yield and electricity demand at a fine level, such as hourly, matters: Without energy storage, coarse data that does not reflect the intermittency of renewable generation may lead to an overinvestment in renewable capacity. We obtain solutions that are simple to compute, intuitive, and provide managers with a framework for evaluating the trade-offs of investing in renewable and conventional technologies. We illustrate our model using two case studies: one for investing in a solar rooftop system for a bank branch and another for investing in a solar thermal system for water heating in a hotel, along with a conventional natural gas heating system.", "keywords": "supply intermittency; renewable energy; capacity investment; sustainability", "geography": "United States (California; South Carolina; San Francisco hotel case)", "industry": "Renewable energy capacity investment for commercial facilities (bank branches, hotels); solar PV and solar thermal systems with conventional energy", "decisionMaker": "Facility managers and organizational decision makers investing in energy capacity portfolios", "scIssue": "The study analyzes one-time capacity investment decisions in renewable energy technologies under stochastic demand, price volatility, and supply intermittency. It analytically evaluates how data granularity and intermittency affect optimal energy portfolio design and risk-adjusted cost trade-offs between renewable and conventional technologies.", "waterCentral": "No", "waterFocus": "Water as an Enabler of Use", "methodology": "Analytical Model; Empirical Analysis (gathered data)"}, {"idx": 6, "doi": "https://doi.org/10.1287/msom.2022.0441", "journal": "Manufacturing & Service Operations Management", "date": "03-July-2025", "title": "Coastal Groundwater Management: Seawater Intrusion Prevention, Artificial Recharge, and Climate Adaptation", "abstract": "Problem definition: Most of the world’s population relies on coastal aquifers for freshwater supplies. Groundwater is experiencing substantial overdrafts and facing ever-mounting freshwater demand. Existing groundwater management strategies are myopic and fail to coordinate production and the operation of protection approaches, including seawater intrusion barriers (SWIBs) and managed aquifer recharge (MAR). Motivated by the urgency of sustainable groundwater management, we investigate how to optimize the joint operations of groundwater production, protection (by injecting fresh water through SWIBs), and replenishment (via MAR). Methodology/results: We model a central planner’s decision on groundwater production, freshwater injection quantities, and artificial replenishment using stochastic dynamic models and identify that the optimal groundwater management policies follow a threshold-type structure. We find that SWIBs and MAR are strategic complements, except in cases with very high groundwater levels, when they turn into strategic substitutes. When the penalty for low groundwater levels decreases, the planner should use SWIBs more aggressively if groundwater levels are low and more conservatively if they are high. A similar pattern holds when natural recharge becomes more abundant, assuming that the natural recharge quantity has no impact on the purchasing cost of imported water. Moreover, we calibrate our model using real data sets in Orange County, California and find that the joint operations of SWIBs and MAR expand groundwater operational flexibility. In contrast, employing SWIBs alone comes at the expense of a lower groundwater level. Managerial implications: Our analysis offers strategic guidance on when to use SWIBs and MAR as complements or substitutes based on groundwater levels. It highlights the value of their joint operation in stabilizing groundwater, especially amid worsening droughts.", "keywords": "groundwater management; seawater intrusion barriers; managed aquifer recharge", "geography": "Orange County, California, United States", "industry": "Coastal groundwater management; aquifer protection; climate adaptation; public water utilities", "decisionMaker": "Central groundwater planners and water district managers", "scIssue": "The study analyzes coordinated groundwater production, seawater intrusion barrier operations, and managed aquifer recharge under stochastic demand and recharge uncertainty. It analytically characterizes threshold policies that balance freshwater extraction, protection, and replenishment to prevent seawater intrusion and enhance long-term aquifer sustainability.", "waterCentral": "Yes", "waterFocus": "Water Risk, Governance & Coordination", "methodology": "Analytical Model; Empirical Analysis (gathered data)"}, {"idx": 7, "doi": "https://doi.org/10.1287/msom.2021.0984", "journal": "Manufacturing & Service Operations Management", "date": "03-June-2021", "title": "Divide and Conquer: A Hygienic, Efficient, and Reliable Assembly Line for Housekeeping", "abstract": "Problem definition: This work focuses on the hotel housekeeping process. In a field study, a possible channel of disease transmission between consecutive guests in hotel rooms is revealed. In order to prevent the transmission, an innovative assembly-line housekeeping method is developed. Academic/practical relevance: The transmission of infectious diseases during hotel stays (e.g., by touching unclean towels or bed linens) has been reported globally. Under the current COVID-19 pandemic, having contact with saliva or mucus left by an infected person could cause infection. The standard housekeeping process used by the majority of hotels leaves a channel for new towels and bed linens in refreshed rooms to be contaminated by bacteria or viruses from used towels and bed linens. Eliminating the contamination channel and preventing disease transmission are crucial for protecting the health and safety of hotel guests, especially under a disease outbreak such as the current COVID-19 pandemic. Methodology: The research was conducted during a field study at a hotel. To design the assembly-line process, the service time distribution of each housekeeping operational step is characterized using data collected from the practice at hundreds of hotel rooms. An optimization model is proposed to optimize the operation. Through a pilot test, the performance of the assembly-line and the traditional housekeeping methods is compared. Results: The pilot test results show that the assembly-line housekeeping method has the potential to improve not only hygienic standards but also, labor efficiency and service quality (error rate). Managerial implications: The outbreak of the COVID-19 pandemic draws tremendous public attention on disease transmission and public hygiene. The principle of the assembly-line method (i.e., eliminating contamination channels through teamwork operational design) can be applied to not only hotel housekeeping practices but also, many other service settings. It leads to hygienic, efficient, and reliable operations, at no additional cost.", "keywords": "housekeeping operation; assembly line; hotel hygiene; labor efficiency", "geography": "China (field study at a high-end hotel)", "industry": "Hotel operations management; guest room housekeeping; hospitality services", "decisionMaker": "Hotel housekeeping managers and operations managers", "scIssue": "The study analyzes service process design in hotel housekeeping to eliminate contamination channels between used and fresh linens. It analytically optimizes task allocation through an assembly-line approach to improve hygiene, labor efficiency, and service reliability without increasing cost.", "waterCentral": "No", "waterFocus": "Not explicitly stated in the paper", "methodology": "Case Study; Analytical Model; Empirical Analysis (gathered data)"}, {"idx": 8, "doi": "https://doi.org/10.1287/opre.1090.0730", "journal": "Operations Research", "date": "2009", "title": "A Deterministic Smart Market Model for Groundwater", "abstract": "Efficient management of water requires balancing environmental needs, externality considerations, and economic efficiency. Toward that end, this paper presents a deterministic linear program that could be used to operate a smart spot market for groundwater. The market design uses the existing hydrological programs MODFLOW and GWM along with standard linear programming methods. In principle, a market could be set up anywhere that a MODFLOW model is available. The market design has parallels to markets in the electricity and gas sectors, which we discuss. We present a case study with notional bids for Marlborough, New Zealand. Our approach would reduce transaction costs for a water market, reduce users’ risk, and increase the reliability of environmental flows. We discuss a number of cautions and limitations to the model and recommend further work on introducing a stochastic framework to the model.", "keywords": "groundwater; smart market; water resources; environmental externalities; bidding/auctions; hydrological optimization", "geography": "Marlborough, New Zealand", "industry": "Groundwater resource management; agricultural irrigation; water rights trading markets", "decisionMaker": "Water management authorities and groundwater users participating in a smart market", "scIssue": "The study examines groundwater allocation under competing agricultural and environmental demands using a centralized smart market mechanism. It analytically integrates hydrological simulation (MODFLOW) with linear programming to internalize externalities and coordinate decentralized water extraction decisions.", "waterCentral": "Yes", "waterFocus": "Water Infrastructure & Access Supply Chains", "methodology": "Analytical Model; Empirical Analysis (gathered data)"}, {"idx": 9, "doi": "https://doi.org/10.1287/mnsc.2015.2395", "journal": "Management Science", "date": "May-2017", "title": "Optimal Strategies for Flood Prevention", "abstract": "Flood prevention policy is of major importance to the Netherlands since a large part of the country is below sea level and high water levels in rivers may also cause floods. In this paper we propose a dike height optimization model to determine economically efficient flood protection standards. We improve the model proposed by David van Dantzig [van Dantzig D (1956) Economic decision problems for flood prevention. Econometrica 24(3):276–287] after a devastating flood in the Netherlands in 1953. Our model is nonconvex, but we derive an explicit simple expression for the global optimal solution, which is periodic. We also discuss how to use this optimal investment policy to derive an efficient flood protection standard. The rather simple expression for this standard gives us much insight into how it depends on several relevant economic and climate model parameters. This approach has been applied to all dike rings in the Netherlands, and the resulting standards have been stated in the new Delta Programme 2015, which has been accepted by the government.", "keywords": "flood prevention; cost–benefit analysis; nonconvex optimization; climate adaptation; dike heightening", "geography": "The Netherlands (national dike ring system)", "industry": "National flood risk management; dike infrastructure planning; climate adaptation policy", "decisionMaker": "National government and water authorities responsible for flood defense investment", "scIssue": "The study analyzes long-term investment timing and sizing decisions for flood defense infrastructure under economic growth and sea-level rise. It analytically balances infrastructure costs and expected flood damages to derive globally optimal, periodic heightening policies and economically efficient legal safety standards.", "waterCentral": "Yes", "waterFocus": "Water Infrastructure & Access Supply Chains", "methodology": "Analytical Model; Empirical Analysis (gathered data)"}, {"idx": 10, "doi": "https://doi.org/10.1287/mnsc.2021.4109", "journal": "Management Science", "date": "October-2021", "title": "Rethinking Salt Supply Chains: Cost and Emissions Analysis for Coproduction of Salt and Fresh Water from U.S. Seawater", "abstract": "Is it feasible to build desalination plants for the coproduction of salt and fresh water from U.S. seawater that could lead to a restructuring of supply chains for salt imports? As it is predicted that climate change will increase water stress worldwide, an increasing number of countries are using desalination plants to generate fresh water. In most such cases, residual concentrates must be disposed of, and the disposal cost is increasing as countries are becoming more environmentally conscious. Selective salt recovery can help to alleviate this issue as it reduces the need for concentrate disposal and generates additional revenue. To gain some insights into the costs and benefits of coproduction plants, we have collected data on current desalination practices and salt imports in the United States along with the manufacturing costs and energy requirements for coproduction plants. We have used this data to build an optimization model to determine an optimal number and location of coproduction plants in the United States and their potential markets for the sale of coproduced salt. In our analysis, we consider a different total number of coproduction facilities, and for each configuration, we evaluate the resulting net water cost and carbon emissions impact. Our results indicate that there exists the potential for building several coproduction plants in the United States that would be both financially competitive with existing desalination plants and lead to a reduction in carbon emissions. This information might be of use to both governments and businesses when they make decisions about the type of desalination facilities built and the implemented “polluter pays” policies.", "keywords": "desalination; salt supply chains; water resources; carbon emissions; coproduction; climate change", "geography": "United States (California, Florida, Texas, and major salt-importing states)", "industry": "Desalination and salt supply chains; water–energy nexus; climate adaptation infrastructure", "decisionMaker": "Governments, water authorities, and businesses deciding on desalination facility type and salt sourcing", "scIssue": "The study evaluates restructuring U.S. salt supply chains through coproduction of salt and fresh water from seawater desalination plants. It analytically optimizes plant location and market allocation decisions to balance production cost, transportation, and carbon emissions impacts under climate-induced water stress.", "waterCentral": "Yes", "waterFocus": "Water as an Embedded Input", "methodology": "Analytical Model; Empirical Analysis (gathered data)"}, {"idx": 11, "doi": "http://dx.doi.org/10.1287/mnsc.2014.1903", "journal": "Management Science", "date": "October-2014", "title": "Conflicting Social Codes and Organizations: Hygiene and Authenticity in Consumer Evaluations of Restaurants", "abstract": "Organization theory highlights the spread of norms of rationality in contemporary life. Yet rationality does not always spread without friction; individuals often act based on other beliefs and norms. We explore this problem in the context of restaurants and diners. We argue that consumers potentially apply either of two social codes when forming value judgments about restaurants: (1) an apparently rational science-based code of hygiene involving compliance with local health regulations or (2) a context-activated code of authenticity involving conformity to cultural norms. We propose that violations of the hygiene code recede in importance when the authenticity code is activated. This claim is supported by empirical analyses of 442,086 online consumer reviews and 52,740 governmental health inspections conducted from 2004 to 2011.", "keywords": "social codes; authenticity; regulatory noncompliance; consumer value ratings; restaurants; health grades", "geography": "Los Angeles County, California, United States", "industry": "Restaurant industry; consumer evaluation; regulatory compliance and authenticity norms", "decisionMaker": "Restaurant consumers (diners) evaluating establishments", "scIssue": "The study examines how consumers evaluate restaurants when scientific hygiene standards conflict with cultural authenticity norms. It analytically investigates how regulatory compliance and perceived authenticity interact to shape consumer ratings and market outcomes in food service supply chains.", "waterCentral": "No", "waterFocus": "Not explicitly stated in the paper", "methodology": "Empirical Analysis (gathered data)"}, {"idx": 12, "doi": "https://doi.org/10.1287/mnsc.2021.4013", "journal": "Management Science", "date": "November-2021", "title": "Does Water Scarcity Affect Environmental Performance? Evidence from Manufacturing Facilities in Texas", "abstract": "It is well known that manufacturing operations can affect the environment, but hardly any research explores whether the natural environment shapes manufacturing operations. Specifically, we investigate whether water scarcity, which results from environmental conditions, influences manufacturing firms to lower their toxic releases to the environment. We created a data set that spans 2000–2016 and includes details on the toxic emissions of 3,092 manufacturing facilities in Texas. Additionally, our data set includes measures of the water scarcity experienced by these facilities. Our econometric analysis shows that manufacturing facilities reduce their toxic releases into the environment when they have experienced drought conditions in the previous year. We examine facilities that release toxics to water as well as facilities with no toxic releases to water. We find that the reduction in total releases (to all media) is driven mainly by those facilities that release toxic chemicals to water. Further investigation at a more granular level indicates that water scarcity compels manufacturing facilities to lower their toxic releases into media other than water (i.e., land or air). The impact of water scarcity on toxic releases to water is more nuanced. A full-sample analysis fails to link water scarcity to lower toxic releases to water, but a further breakdown shows that manufacturing facilities in counties with a higher incidence of drought do lower their toxic releases to water. We also find that facilities that release toxics to water undertake more technical and input modifications to their manufacturing processes when they face water scarcity.", "keywords": "environmental performance; water scarcity; drought; toxic chemical releases; manufacturing", "geography": "Texas, United States", "industry": "Manufacturing facilities (EPA TRI reporting); drought-affected industrial operations", "decisionMaker": "Manufacturing facility managers responding to water scarcity", "scIssue": "The study examines how exogenous water scarcity (drought conditions) influences manufacturing operations and toxic release behavior. It empirically analyzes how resource constraints alter production processes and environmental performance across media (water, land, air).", "waterCentral": "Yes", "waterFocus": "Water as a Production Constraint", "methodology": "Empirical Analysis (gathered data)"}, {"idx": 13, "doi": "https://doi.org/10.1287/mnsc.2021.01145", "journal": "Management Science", "date": "November-2024", "title": "Indirect Value of Public Infrastructure Technology", "abstract": "Although prior research has primarily focused on the direct value of information technology (IT) and IT adoption by individuals and firms, this study explores the indirect value of IT in the form of public infrastructure technology. By exploiting a spatial discontinuity in water monitoring stations, we discover that firms located immediately upstream of water monitoring stations exhibit significantly lower levels of corruption than firms located immediately downstream. These findings are particularly noteworthy given that water monitoring stations have the potential to generate significant indirect value as they are not explicitly designed to mitigate corruption. Further analyses reveal that public infrastructure technology alone does not hold the key to mitigating corporate corruption. Instead, it is the synergistic interplay between public infrastructure technology and organizational change that drives the outcome. These findings contribute to a deeper understanding of the broader IT value landscape, emphasizing the indirect value of technological advancements in public infrastructure that were not originally intended for such benefit. Additionally, our findings highlight the benefits of leveraging existing infrastructure technology to address emerging societal needs.", "keywords": "corruption; public infrastructure technology; IT value; organizational change; technology complementarity", "geography": "China (firms near state-controlled water monitoring stations)", "industry": "Industrial firms (polluting and nonpolluting); public water quality monitoring infrastructure; governance context", "decisionMaker": "Corporate managers and local government officials", "scIssue": "The study examines how public water monitoring infrastructure indirectly shapes firm behavior by reducing corruption expenditures among polluting firms. It analytically exploits spatial discontinuity around monitoring stations to identify how technological infrastructure combined with organizational incentives alters firm-level governance practices.", "waterCentral": "Yes", "waterFocus": "Water Risk, Governance & Coordination", "methodology": "Empirical Analysis (gathered data)"}, {"idx": 14, "doi": "https://doi.org/10.1287/mnsc.2015.2400", "journal": "Management Science", "date": "05-May-2016", "title": "Motivating Process Compliance Through Individual Electronic Monitoring: An Empirical Examination of Hand Hygiene in Healthcare", "abstract": "The design and use of standard processes are foundational recommendations in many operations practices. Yet, given the demonstrated performance benefits of standardized processes, it is surprising that they are often not followed consistently. One way to ensure greater compliance is by electronically monitoring the activities of individuals, although such aggressive monitoring poses the risk of inducing backlash. In the setting of hand hygiene in healthcare, a context where compliance with standard processes is frequently less than 50% and where this lack of compliance can result in negative consequences, we investigated the effectiveness of electronic monitoring. We did so using a unique, radio frequency identification (RFID)-based system deployed in 71 hospital units. We found that electronically monitoring individual compliance resulted in a large, positive increase in compliance. We also found that there was substantial variability in the effect across units and that units with higher levels of preactivation compliance experienced increased benefits from monitoring relative to units with lower levels of prepreactivation compliance. By observing compliance rates over three and a half years, we investigated the persistent effects of individual monitoring and found that compliance rates initially increased before they gradually declined. Additionally, in multiple units, individual monitoring was discontinued, allowing for an investigation of the impact of removing the intervention on compliance. Surprisingly, we found that, after removal, compliance rates declined to below prepreactivation levels. Our findings suggest that, although individual electronic monitoring can dramatically improve process compliance, it requires sustained managerial commitment.", "keywords": "process compliance; hand washing; electronic monitoring; empirical operations", "geography": "United States (42 hospitals; 71 hospital units)", "industry": "Healthcare operations; hospital process compliance monitoring", "decisionMaker": "Hospital managers and healthcare caregivers", "scIssue": "The study examines how individual electronic monitoring affects compliance with standardized operational processes in healthcare. It empirically evaluates how RFID-based monitoring systems alter caregiver behavior, persistence of compliance, and performance outcomes over time.", "waterCentral": "Yes", "waterFocus": "Water as an Enabler of Use", "methodology": "Empirical Analysis (gathered data)"}, {"idx": 15, "doi": "https://doi.org/10.1093/jcr/ucab069", "journal": "Journal of Consumer Research", "date": "14-December-2021", "title": "Tangential Immersion: Increasing Persistence in Boring Consumer Behaviors", "abstract": "Consumers’ lives are filled with myriad behaviors that can be successfully executed with minimal attention. Many such low-attention behaviors benefit from persistence but are often not performed long enough (e.g., hygiene, exercise). The current work examines consumer persistence-failures through an attentional lens. Specifically, drawing on boredom and resource-matching frameworks, we suggest one key driver of poor consumer persistence is that many behaviors demand less attention than consumers have available, leaving excess attention that leads to boredom and premature abandonment. The current research thus proposes an attention-matching framework for persistence and suggests that concurrently performing a task that engages excess attention will improve the match between attentional demands and available resources, thereby increasing persistence. Five experiments across a range of low-attention behaviors (e.g., toothbrushing, coordination exercise) demonstrate that concurrently performing a task that occupies excess attention (e.g., reading, listening), delays boredom and increases persistence. Moreover, two important boundary conditions arise. First, the focal behavior must require minimal attention, leaving excess attention available to attend to the tangential task. Second, the tangential task must engage excess attention without exceeding attentional capacity. This research provides important theoretical and practical contributions, offering the potential to improve consumer well-being by increasing persistence in low-attention behaviors.", "keywords": "boredom; attention; multitasking; persistence; well-being", "geography": "United States (laboratory and online samples)", "industry": "Consumer behavior; low-attention health and hygiene behaviors", "decisionMaker": "Individual consumers", "scIssue": "The study examines how attentional resource allocation influences persistence in low-attention consumer behaviors. It experimentally evaluates how pairing focal behaviors with tangential immersive tasks alters behavioral duration and task adherence.", "waterCentral": "Yes", "waterFocus": "Water as an Enabler of Use", "methodology": "Behavioral Experiment"}, {"idx": 16, "doi": "https://doi.org/10.1093/jcr/ucad071", "journal": "Journal of Consumer Research", "date": "28-October-2023", "title": "Is “4 for $16” Better than “4 for $15.30”? The Price Divisibility Effect in Multipack Purchases", "abstract": "While much is known about product bundles comprised of different items, much less is known about multipacks—a product set comprised of multiple identical items (e.g., a 4-pack body washes). Using the context of multipacks, the authors propose a novel price divisibility effect, which suggests that a multipack’s price that is easily divisible (vs. non-divisible) by the number of component items in the multipack will increase its purchase likelihood. For example, purchase likelihoods of a four-pack body wash multipack will be higher when its price is $16 (easily divisible by 4) versus $15.30 (non-divisible by 4). This occurs because a divisible versus non-divisible price shifts consumers’ attention to the unit and creates a belief that each unit item in the multipack will be consumed quickly, which, in turn, helps justify purchasing multiple units. The authors report findings from 15 studies (including a field experiment), where they demonstrate the effect and its underlying mechanism and delineate several moderators and boundary conditions. This research contributes to several literature streams, including those on product bundling, multiple-unit pricing, product consumption, and numerical cognition.", "keywords": "multipack; price; quantity; divisibility; unit consumption; justifiability", "geography": "United States (online panels and field experiment)", "industry": "Consumer packaged goods; multipack pricing decisions", "decisionMaker": "Individual consumers", "scIssue": "The study examines how price–quantity numerical relationships in multipacks influence consumer purchase decisions. It experimentally demonstrates how divisible pricing shifts attention to unit-level consumption, alters perceived consumption speed, and increases justifiability of purchasing multiple units.", "waterCentral": "No", "waterFocus": "Not explicitly stated in the paper", "methodology": "Behavioral Experiment; Empirical Analysis (field experiment)"}, {"idx": 17, "doi": "https://doi.org/10.1287/mksc.2022.0230", "journal": "Marketing Science", "date": "05-July-2024", "title": "Consumption Responses to an Unpopular Policy: Evidence from a Short-Lived Soda Tax", "abstract": "Public policies that restrict or intervene in consumer choices are often controversial. We investigate whether consumers’ disagreement with a policy affects how they respond to that policy using a natural experiment in Washington state, where a consumption tax on soda was repealed by popular ballot. We use data on precinct-level voting and shoppers’ home locations to create a novel measure of grocery store–level tax opposition. We then combine this measure with price and quantity data from grocery stores statewide. Leveraging a difference-in-differences research design in which we instrument for tax opposition, we show that, in response to the short-lived Washington state soda tax, stores frequented by tax opponents experience a 53% greater reduction in quantity sold of taxed beverages compared with stores frequented by tax supporters even though the tax pass-through is generally uniform across all stores. Our mechanism analysis is consistent with an oppositional behavioral response, in which upset consumers decrease consumption more strongly to avoid the tax burden. If this behavioral response is not taken into account, the optimal tax rate may be set too high, resulting in lower tax revenue.", "keywords": "consumer demand; soda tax; tax avoidance; fairness; behavioral economics; rebellious behavior", "geography": "Washington State, United States (with regional controls)", "industry": "Grocery retail; soda and beverage taxation", "decisionMaker": "Consumers responding to soda tax policy", "scIssue": "The study examines how consumer opposition to a soda tax affects demand for taxed beverages in grocery retail supply chains. It empirically demonstrates heterogeneous demand reductions driven by oppositional tax avoidance behavior rather than differential price pass-through.", "waterCentral": "No", "waterFocus": "Not explicitly stated in the paper", "methodology": "Empirical Analysis (gathered data)"}, {"idx": 18, "doi": "https://doi.org/10.1287/mksc.2022.1415", "journal": "Marketing Science", "date": "06-December-2022", "title": "Identifying State Dependence in Brand Choice: Evidence from Hurricanes", "abstract": "We analyze structural state dependence in brand choice using variation from brand switching during stockouts caused by hurricanes. We derive a simple test for structural state dependence based on the time series of choice persistence for households affected by the stockouts. Using data from the bottled water category, we show that demand increases substantially before hurricanes, causing households to purchase different brands. We find that purchase behavior reverts back to its pre-hurricane trajectory immediately after a hurricane, and we are not able to reject the null hypothesis of no structural state dependence. By contrast, the common approach of estimating structural state dependence based on temporal price variation via a discrete choice model yields a positive effect using data for the same category. We argue that our approach is better suited to identify the causal impact of past choices because it requires fewer assumptions and is based on more plausibly exogenous variation in brand switching resulting from stockouts.", "keywords": "brand choice; brand loyalty; state dependence; preference heterogeneity", "geography": "United States (hurricane-affected counties)", "industry": "Consumer packaged goods; bottled water; hurricane-induced stockouts", "decisionMaker": "Household consumers", "scIssue": "The study examines how exogenous stockouts caused by hurricanes influence brand switching and persistence in consumer packaged goods markets. It empirically tests whether observed purchase persistence reflects structural state dependence or merely preference heterogeneity in brand choice.", "waterCentral": "Yes", "waterFocus": "Water as an Embedded Input", "methodology": "Empirical Analysis (gathered data); Analytical Model"}, {"idx": 19, "doi": "https://doi.org/10.1287/msom.2018.0768", "journal": "Manufacturing & Service Operations Management", "date": "13-May-2019", "title": "Improving Hand Hygiene Process Compliance Through Process Monitoring in Healthcare", "abstract": "Problem definition: We study a compliance problem of healthcare workers (HCWs) in hospitals where hand hygiene compliance rates are generally low. We first analyze how peer effects impact compliance decisions of HCWs and then analyze how monitoring can improve compliance. Academic/practical relevance: Inducing process compliance of human operators is an ongoing challenge in operations management with significant implications on the productivity and the quality of the products or services rendered by standardized processes. In healthcare, low hand hygiene compliance of HCWs is the leading cause of hospital-acquired infections, which can be largely prevented by HCWs following standardized hand hygiene processes. Methodology: Using a game-theoretical approach, we model HCWs’ reactions to peers’ (non-)compliance to determine their equilibrium compliance levels. We integrate the model with a disease-transmission model to determine how the compliance affects disease prevalence in a hospital ward. Results: When the process compliance is endogenous, HCWs play a mixed strategy in equilibrium between complying and noncomplying. We establish that a macrolevel hand hygiene compliance rate of HCWs can result from a combination of four different types of microlevel noncompliance: free-riding, safe-playing, self-regarding, and opportunistic behaviors. Finally, we show that the marginal effect of monitoring on reducing disease prevalence depends on clinical factors, HCWs’ interpersonal learning, and other integration factors like goal setting. Managerial implications: The results demonstrate that the monitoring intervention may not effectively prevent disease transmission without understanding the microlevel behaviors of noncompliant HCWs. Our results provide an explanation as to why there is a significant variability in the effectiveness of management intervention as observed in practice.", "keywords": "process compliance; hand hygiene; monitoring; healthcare; disease transmission", "geography": "Not explicitly stated in the paper", "industry": "Healthcare operations; hospital infection control", "decisionMaker": "Healthcare workers and hospital managers", "scIssue": "The study analyzes endogenous process compliance among healthcare workers and its impact on hospital-acquired infection transmission. It integrates peer-interaction game theory with a disease-transmission model to evaluate how monitoring interventions alter compliance equilibria and disease prevalence.", "waterCentral": "Yes", "waterFocus": "Water as an Enabler of Use", "methodology": "Analytical Model"}, {"idx": 20, "doi": "https://doi.org/10.1111/poms.12007", "journal": "Production and Operations Management", "date": "2013", "title": "Optimal Crop Choice, Irrigation Allocation, and the Impact of Contract Farming", "abstract": "The changing climate and concerns over food security are prompting a new look at the supply chain reliability of products derived from agriculture, and the potential role of contract farming as a mechanism to address climate and price risk while contributing toward crop diversification and water use efficiency is also emerging. In this study, the decision problem of a farmer associated with allocating his land among different crops with varying water requirements is considered, given that a subset of the crops may be associated with a forward contract that is being offered by a buyer. The problem includes a decision to acquire a certain amount of irrigation water capacity prior to the season and to allocate this capacity as irrigation water to be applied during the season to each of the crops selected. Rainfall in the growing season and the market price of each crop at the end of the season are considered to be random variables. Two stochastic programming models are developed to consider facets of this problem and to understand how contracts that reduce market price uncertainty from the problem may change the farmer’s decision. The structural properties of these models are discussed, and selected implications are illustrated through an application to data from the Ganganagar district in Rajasthan, India.", "keywords": "crop planning; contract farming; irrigation; agriculture; India", "geography": "Ganganagar district, Rajasthan, India", "industry": "Agricultural supply chains; irrigation investment; rainfall and price uncertainty; contract farming", "decisionMaker": "Farmer allocating land and irrigation capacity", "scIssue": "The study analyzes how farmers optimally allocate land among crops and invest in irrigation capacity under rainfall and price uncertainty. It analytically evaluates how forward contracts alter crop choice, irrigation allocation, water usage, and supply chain reliability.", "waterCentral": "Yes", "waterFocus": "Water as a Production Constraint", "methodology": "Analytical Model; Empirical Analysis (gathered data)"}, {"idx": 21, "doi": "https://doi.org/10.1177/00222437221146728", "journal": "Journal of Marketing Research", "date": "Not explicitly stated in the paper", "title": "When and How Slow Motion Makes Products More Luxurious", "abstract": "This research examines when and how the speed of video ads influences consumers’ perceptions of luxuriousness and their subsequent behaviors toward products or brands featured in the ads. Across 12 experiments (total N = 27,227, five preregistered), the authors demonstrate that when a video ad depicts a product in slow motion (vs. regular speed), consumers perceive the featured product or brand as more luxurious. The effect emerges across various product categories (chocolate, shampoo, mineral water, wine) and in different countries (United States, United Kingdom, France). Tests of mediation and moderation suggest that the effect occurs because viewing a slow-motion ad increases feelings of immersion, which lead consumers to expect greater hedonic value from the featured product and thus view it as more luxurious. Consistent with this account, the effect weakens when video blurriness or buffering impairs the immersive viewing experience afforded by slow motion, and the effect attenuates among consumers who are very weakly or very strongly predisposed to experience immersion. Finally, by enhancing perceptions of luxuriousness, slow motion subsequently boosts consumers’ desire for the featured product or brand (as manifested by higher willingness to pay, purchase intentions, and ad click rates), particularly when the goal to consume luxury is salient (vs. not).", "keywords": "slow motion; video speed; video advertising; perceptions of luxuriousness; immersion; hedonic value; digital marketing", "geography": "United States; United Kingdom; France", "industry": "Digital marketing; video advertising; luxury positioning; consumer perception", "decisionMaker": "Consumers viewing video advertisements", "scIssue": "The study examines how video speed in advertising shapes consumers’ luxury perceptions and downstream purchase-related behaviors. It analytically demonstrates that slow motion enhances immersion and expected hedonic value, thereby influencing demand-side valuation and willingness to pay rather than operational supply chain structures.", "waterCentral": "No", "waterFocus": "Not explicitly stated in the paper", "methodology": "Behavioral Experiment"}, {"idx": 22, "doi": "https://doi.org/10.1086/591482", "journal": "Journal of Consumer Research", "date": "13-August-2008", "title": "Introduction: The Moment and Place for a Special Issue", "abstract": "These are more than interesting times. They are the times in which the ideology and practices of consumption have multiplied across the earth to levels of complexity, subtlety, and influence that were unimaginable just a few decades ago.\nThe problems and challenges related to consumer behaviors today include, but are not restricted to, unhealthy eating, effective and safe use of the Internet, substance abuse (e.g., alcohol, drugs), tobacco consumption, poor financial planning, aging and being elderly, disablements and impairments, indigence and illiteracy, education and socialization of young consumers, sexually transmitted diseases, and environmental deterioration. At the same time, many consumer behaviors support and enhance life. These include, but are not limited to, hobbies, exercise, festivals and celebrations, sustainable consumption behaviors (e.g., efficient water use, recycling), donations and communal consumption, and an array of artistic endeavors (e.g., music, painting). Over the years, unfortunately, the field of consumer research has generally underprioritized scholarship for alleviating problems and advancing opportunities of well-being. Related contributions from the Journal of Consumer Research (JCR) have been correspondingly irregular.", "keywords": "consumer welfare; Transformative Consumer Research (TCR); well-being; quality of life; ethics of consumption; proenvironmental behaviors", "geography": "United States", "industry": "Consumer behavior research; consumer welfare; well-being; public policy; sustainability", "decisionMaker": "Consumers; consumer researchers; policy makers; corporate executives", "scIssue": "The article highlights how consumer research has historically underprioritized issues of consumer welfare, sustainability, and equitable market access despite their societal importance. It analytically argues for a transformative research agenda that better integrates consumption practices with broader socioeconomic and environmental systems influencing well-being.", "waterCentral": "No", "waterFocus": "Not explicitly stated in the paper", "methodology": "Not explicitly stated in the paper"}, {"idx": 23, "doi": "https://doi.org/10.1177/0022243720936230", "journal": "Journal of Marketing Research", "date": "Not explicitly stated in the paper", "title": "Bayesian Synthetic Control Methods", "abstract": "The authors propose a new Bayesian synthetic control framework to overcome limitations of extant synthetic control methods (SCMs). The proposed Bayesian synthetic control methods (BSCMs) do not impose any restrictive constraints on the parameter space a priori. Moreover, they provide statistical inference in a straightforward manner as well as a natural mechanism to deal with the “large p, small n” and sparsity problems through Markov chain Monte Carlo procedures. Using simulations, the authors find that for a variety of data-generating processes, the proposed BSCMs almost always provide better predictive accuracy and parameter precision than extant SCMs. They demonstrate an application of the proposed BSCMs to a real-world context of a tax imposed on soda sales in Washington state in 2010. As in the simulations, the proposed models outperform extant models, as measured by predictive accuracy in the posttreatment periods. The authors find that the tax led to an increase of 5.7% in retail price and a decrease of 5.5%–5.8% in sales. They also find that retailers in Washington overshifted the tax to consumers, leading to a pass-through rate of approximately 121%.", "keywords": "Bayesian estimation; synthetic control; soda tax; treatment effect; causal inference; Markov chain Monte Carlo", "geography": "Washington state, United States", "industry": "Retail beverage market; soda taxation; causal policy evaluation", "decisionMaker": "Retailers; policymakers (tax authorities)", "scIssue": "The study evaluates the causal impact of a soda tax on retail pricing and sales using advanced synthetic control methods. It analytically demonstrates tax pass-through and demand responses within the retail beverage supply chain, highlighting pricing power and incidence effects.", "waterCentral": "No", "waterFocus": "Not explicitly stated in the paper", "methodology": "Analytical Model; Empirical Analysis (gathered data)"}, {"idx": 24, "doi": "https://doi.org/10.1111/poms.12710", "journal": "Production and Operations Management", "date": "September-2017", "title": "Collaborate or Compete: Examining Manufacturers’ Replacement Strategies for a Substance of Concern", "abstract": "The recent proliferation of media reports on substances of concern has increased consumer fears, sparked scientific debate, and highlighted the need for stronger chemical regulations. When a substance of concern is identified (e.g., bisphenol-A (BPA) in reusable water bottles), manufacturers face difficult trade-offs in deciding whether to proactively replace the substance in their products or to defer replacement and wait to see if regulation occurs. In this study, we examine when opportunities exist for manufacturers to avoid competitively replacing (i.e., making their replacement decisions on their own), and instead, collaborate to replace a substance of concern. We model a vertically differentiated market consisting of a high-end manufacturer and a low-end manufacturer, both of whom sell a product that contains a substance of concern. Our analysis investigates how market dynamics (competition and consumer preferences) and external factors (replacement costs and regulatory uncertainty) influence manufacturers’ collaboration, replacement, and pricing decisions. We find that when the manufacturers do not collaborate, the high-end manufacturer can use the presence of a substance of concern to dominate the market by capturing more demand and often charging a higher price for his product than the low-end manufacturer. Collaboration is possible when there is either a shared fixed cost savings for both manufacturers or an opportunity for the low-end manufacturer to benefit his competitive position by motivating the high-end manufacturer to collaborate. From a consumer perspective, although collaboration reduces consumer exposure to the substance of concern, it can decrease consumer surplus when the replacement substance is very expensive.", "keywords": "collaboration; competition; environmental regulations; substances of concern; game theory; regulatory uncertainty", "geography": "Not explicitly stated in the paper", "industry": "Consumer products manufacturing; chemical regulation; environmentally sensitive markets (e.g., reusable water bottles)", "decisionMaker": "High-end and low-end manufacturers", "scIssue": "The paper analyzes manufacturers’ strategic decisions regarding replacement of hazardous substances under regulatory uncertainty and competitive pressure. It analytically shows how collaboration or competition affects cost-sharing, pricing, consumer exposure, and market structure in vertically differentiated supply chains.", "waterCentral": "No", "waterFocus": "Not explicitly stated in the paper", "methodology": "Analytical Model"}, {"idx": 25, "doi": "Not explicitly stated in the paper", "journal": "Journal of Marketing", "date": "January-2012", "title": "Go Green! Should Environmental Messages Be So Assertive?", "abstract": "Environmental communications often contain assertive commands, even though research in consumer behavior, psycholinguistics, and communications has repeatedly shown that gentler phrasing is more effective when seeking consumer compliance. This article shows that the persuasiveness of assertive language depends on the perceived importance of the issue at hand: Recipients respond better to pushy requests in domains that they view as important, but they need more suggestive appeals when they lack initial conviction. The authors examine this effect in three laboratory studies and one field experiment using Google AdWords. Their findings refer to various environmental contexts (i.e., economizing water, recycling plastic containers, reducing air and sea pollution). The key implication of these findings is that issue importance needs to be carefully assessed (or affected) before the language of effective environmental campaigns can be selected.", "keywords": "persuasion; assertive language; issue importance; environmental marketing; demarketing; social marketing", "geography": "Not explicitly stated in the paper", "industry": "Environmental marketing; proenvironmental behavior campaigns; social marketing", "decisionMaker": "Consumers responding to environmental campaigns", "scIssue": "The study investigates how message framing influences consumer compliance with environmental behaviors such as economizing water and recycling. It analytically demonstrates that perceived issue importance moderates the effectiveness of assertive versus nonassertive messaging in influencing environmentally responsible consumption decisions.", "waterCentral": "No", "waterFocus": "Not explicitly stated in the paper", "methodology": "Behavioral Experiment"}, {"idx": 26, "doi": "https://doi.org/10.1111/poms.12389", "journal": "Production and Operations Management", "date": "September-2015", "title": "Municipal Groundwater Management: Optimal Allocation and Control of a Renewable Natural Resource", "abstract": "We study a municipal groundwater management problem to determine optimal allocation and control policies in the presence of water transfer opportunities. We establish and characterize threshold polices governing export or import decisions of a given municipality. In the spirit of the Triple Bottom Line (3BL), we ascertain that exporting (importing) water through a water market defined by an exogenous export/import price is detrimental (beneficial) to both society and the environment within the municipality. In contrast, fixed quantity trading between two municipalities defined by an endogenously negotiated export/import price can have positive as well as negative impacts from a global 3BL perspective. In particular, typical trading scenarios that occur between municipalities can be detrimental to the environment. We also study the implications of privatization, and find that a privatized municipality would be more (less) likely to export (import) water as compared to its non-privatized counterpart, resulting in negative implications for society within the municipality. However, if exports are banned, privatization can benefit the environment by mitigating the damage caused by the extraction differential, a phenomenon analogous to the green paradox. Moreover, careful and restricted privatization of municipalities can lead to positive global 3BL impacts from fixed quantity trading.", "keywords": "groundwater management; Triple Bottom Line; water transfers; privatization; renewable resource control; dynamic optimization", "geography": "United States", "industry": "Municipal water supply systems; groundwater extraction; water markets; public vs. privatized utilities", "decisionMaker": "Municipal water authorities; privatized municipal water managers", "scIssue": "The study analyzes optimal groundwater extraction and inter-municipal water transfer policies under market trading and privatization regimes. It analytically evaluates how export/import decisions and ownership structures affect resource sustainability, social welfare, and environmental outcomes within decentralized water supply systems.", "waterCentral": "Yes", "waterFocus": "Water as a Production Constraint", "methodology": "Analytical Model"}, {"idx": 27, "doi": "https://doi.org/10.1111/poms.13230", "journal": "Production and Operations Management", "date": "October-2020", "title": "Pre-Hurricane Consumer Stockpiling and Post-Hurricane Product Availability: Empirical Evidence from Natural Experiments", "abstract": "The provision of essential supplies is a key service provided by retailers when demand spikes due to consumer stockpiling during environmental emergencies. Moreover, it is important for retailers to quickly recover from these events by replenishing the stock of essential supplies to meet the continuing needs of local residents. The main purpose of this research is to study consumer precautionary stockpiling behavior prior to the onset of hurricane landfalls and determine the impact of this behavior on in-store product availability for various formats of retail store outlets. Specifically, we focus on the bottled water product category, an essential emergency category in hurricane preparedness. This study combines an event analysis methodology with econometric models using archival retail scanner data from 60 US retail chains located in 963 counties and real-time data from four recent US continental hurricanes. We find that supply-side characteristics (retail network and product variety), demand-side characteristics (hurricane experience and household income), and disaster characteristics (hazard proximity and hazard intensity) significantly affect consumer stockpiling propensity as the hurricanes approach. The increased consumer stockpiling has immediate and longer-term impacts on retail operations, namely, in-store product availability. Among various retail formats, drug stores are associated with the highest consumer stockpiling propensity before hurricanes, while dollar stores and discount stores are associated with the lowest in-store product availability following hurricanes. Our study points to the need for retailers and policymakers to carefully monitor factors affecting consumer stockpiling behavior that will allow for better allocation of critical supplies during the hurricane season.", "keywords": "product availability; consumer stockpiling; hurricane disasters; bottled water; natural experiments; retail operations", "geography": "United States", "industry": "Retail supply chains; disaster preparedness; bottled water distribution; emergency logistics", "decisionMaker": "Retailers; supply chain managers; policymakers", "scIssue": "The study examines how pre-disaster consumer stockpiling behavior affects post-disaster product availability in retail supply chains. It empirically identifies supply-side, demand-side, and hazard-related drivers of bottled water shortages and recovery dynamics across retail formats.", "waterCentral": "Yes", "waterFocus": "Water Infrastructure & Access Supply Chains", "methodology": "Empirical Analysis (gathered data)"}, {"idx": 28, "doi": "https://doi.org/10.1509/jmr.12.0408", "journal": "Journal of Marketing Research", "date": "April-2014", "title": "I Think I Can, I Think I Can: Brand Use, Self-Efficacy, and Performance", "abstract": "Not explicitly stated in the paper.", "keywords": "brands; self-efficacy; implicit self-theories; task performance; brand use; consumer psychology", "geography": "Not explicitly stated in the paper", "industry": "Branding; consumer performance contexts (academic testing, athletic performance)", "decisionMaker": "Consumers performing challenging tasks", "scIssue": "The study investigates how brand use influences consumers’ self-efficacy and task performance in challenging situations. It analytically and experimentally demonstrates that brand-induced psychological mechanisms can affect performance outcomes without altering product functionality.", "waterCentral": "No", "waterFocus": "Not explicitly stated in the paper", "methodology": "Behavioral Experiment"}, {"idx": 29, "doi": "https://doi.org/10.1111/poms.13870", "journal": "Production and Operations Management", "date": "20-February-2022", "title": "Genuine and Sustained POM Mastery from Linear POM to POM System Symphonies", "abstract": "A dramatically changing business landscape characterized by volatility and uncertainty (which in turn are driven by unpredictable alterations of conditions by such factors as geopolitical events, climate changes, disasters—natural and human causes, reduction in food, potable water, and critical materials supply along with environmental contamination), has created a situation whereby a rethink of Production and Operations Management (POM) strategies and practices is considered timely and appropriate. Against a backdrop of current POM strengths and weaknesses, and expected POM futures, a response path for POM adoption to deal with such uncertainties and risks is proposed and described in some detail. This involves the treatment of POM as a more interconnected and integrated system than has hitherto been the case. Such an interconnected approach is described as a POM symphony where all key players would be playing from the same script and the POM leader must serve as a coach-coordinator, that is, the symphony’s conductor.", "keywords": "POM mastery; supply chain disruptions; risk management; systems integration; volatility and uncertainty; POM futures", "geography": "Not explicitly stated in the paper", "industry": "Global supply chains; production and operations management; risk and resilience management", "decisionMaker": "POM leaders; supply chain managers; organizational executives", "scIssue": "The article examines systemic failures in global supply chains under shocks such as pandemics, climate events, and geopolitical disruptions. It analytically argues for an integrated “POM symphony” approach to risk management and coordinated supply chain governance to enhance resilience and long-term operational mastery.", "waterCentral": "No", "waterFocus": "Not explicitly stated in the paper", "methodology": "Analytical Model"}, {"idx": 30, "doi": "https://doi.org/10.1177/0022243720969401", "journal": "Journal of Marketing Research", "date": "2021", "title": "The Impact of Soda Taxes: Pass-Through, Tax Avoidance, and Nutritional Effects", "abstract": "The authors analyze the impact of a tax on sweetened beverages using a unique data set of prices, quantities sold, and nutritional information across several thousand taxed and untaxed beverages for a large set of stores in Philadelphia and its surrounding area. The tax is passed through at an average rate of 97%, leading to a 34% price increase. Demand in the taxed area decreases by 46% in response to the tax. Cross-shopping to stores outside of Philadelphia offsets more than half of the reduction in sales in the city and decreases the net reduction in sales of taxed beverages to only 22%. There is no significant substitution to bottled water and modest substitution to untaxed natural juices. The authors show that tax avoidance through cross-shopping severely constrains revenue generation and nutritional improvement, thus making geographic coverage an important policy decision.", "keywords": "soda taxes; pass-through; tax avoidance; cross-shopping; nutritional effects; policy evaluation", "geography": "Philadelphia, United States", "industry": "Retail beverage markets; public health policy; taxation of sugar-sweetened beverages", "decisionMaker": "Consumers; retailers; policymakers", "scIssue": "The study evaluates how soda taxes affect retail pricing, consumer demand, cross-border shopping, and nutritional intake in beverage supply chains. It empirically demonstrates that tax pass-through and geographic tax avoidance significantly alter sales volumes and constrain intended health and revenue outcomes.", "waterCentral": "No", "waterFocus": "Not explicitly stated in the paper", "methodology": "Empirical Analysis (gathered data)"}, {"idx": 31, "doi": "https://doi.org/10.1111/poms.12427", "journal": "Production and Operations Management", "date": "February-2016", "title": "Temporary Hubs for the Global Vehicle Supply Chain in Humanitarian Operations", "abstract": "We model the global vehicle supply chain of an International Humanitarian Organization (IHO) with a dynamic hub location model across monthly periods. We use actual vehicle data from the International Federation of the Red Cross to feed our model and provide insights into IHO secondary support demand. We find that secondary support demand for items such as vehicles is different from primary beneficiary demand for items such as water and food. When considering disaster response and development program demand simultaneously (disaster cycle management), our results illustrate that keeping a lean centralized hub configuration with an option for temporary hubs in mega disaster locations can reduce overall supply chain costs over a long time horizon. We also show that it is possible to structure a supply chain to take operational advantage of earmarked funding. This research lays the groundwork for using optimization models to analyze disaster cycle management.", "keywords": "humanitarian logistics; disaster cycle management; dynamic hub location; earmarked funding; vehicle supply chain", "geography": "Global", "industry": "Humanitarian supply chains; disaster response logistics; global vehicle fleet management", "decisionMaker": "International Humanitarian Organization logistics managers", "scIssue": "The study analyzes optimal hub configuration for humanitarian vehicle supply chains across disaster cycles, balancing cost efficiency and rapid disaster response. It demonstrates that temporary hubs and dynamic network design can improve long-term resilience and leverage earmarked funding effectively.", "waterCentral": "No", "waterFocus": "Not explicitly stated in the paper", "methodology": "Analytical Model"}, {"idx": 32, "doi": "https://doi.org/10.1111/poms.13349", "journal": "Production and Operations Management", "date": "January-2022", "title": "Innovative Technology and Operations for Alleviating Poverty through Women’s Economic Empowerment", "abstract": "Can technology and operations enable the world to achieve various United Nation Sustainable Development Goals? I provide my own perspective on this question by focusing on the issue of gender equality through the lens of “women’s economic empowerment.” To do so, I use case examples to describe how innovative operations enabled by technologies (mobile phones/online platforms, solar technology, blockchain/AI, and Internet of Things) can empower women to alleviate poverty, reduce hunger by improving health, increase access to clean water and sanitation, increase access to education and decent work. Then I share some ideas for Operations Management researchers to consider so that we can explore and develop ways to close the “gender gap.”", "keywords": "women’s economic empowerment; gender equality; innovative operations; sustainable development goals; poverty alleviation; technology-enabled operations", "geography": "Global", "industry": "Development operations; social enterprises; technology-enabled inclusive supply chains", "decisionMaker": "Women entrepreneurs; NGOs; policymakers; social enterprises", "scIssue": "The article examines how technology-enabled operations (mobile platforms, solar systems, blockchain, IoT) can empower women economically and improve access to resources such as clean water, sanitation, education, and employment. It analytically links operational innovation to poverty alleviation and sustainable development goals.", "waterCentral": "Yes", "waterFocus": "Water Infrastructure & Access Supply Chains", "methodology": "Case Study"}, {"idx": 33, "doi": "https://doi.org/10.1093/jcr/ucad060", "journal": "Journal of Consumer Research", "date": "2024", "title": "How Do Consumers React to Production Waste?", "abstract": "Production waste, or inefficiencies in product manufacturing, is a major contributor to environmental problems. Consider production waste in garment manufacturing—which has been criticized for wasteful use of natural resources (e.g., using excessive water and fabric) and wasteful disposal of resource residuals (e.g., discarding excessive wastewater and fabric scraps). The present research examines consumer reactions to production waste and its mitigation as a function of whether it is characterized in terms of resource use versus disposal. A series of seven studies (including field and secondary data) finds that (i) consumers are less sensitive to wasteful resource use than disposal due to lower perceptions of environmental harm; (ii) likewise, consumers are less sensitive to waste mitigation targeting resource use than disposal due to lower perceptions of environmental benefit; and (iii) these waste reaction differences are attenuated when resource scarcity or long-term orientation is heightened (which increases consumer sensitivity to resource use). Together, this research sheds light on how, why, and when consumers are averse to production waste, while providing guidance regarding interventions focused on fighting production waste and promoting sustainability.", "keywords": "production waste; resource use vs. disposal; sustainability; environmental harm perception; waste mitigation; consumer behavior", "geography": "Not explicitly stated in the paper", "industry": "Sustainable manufacturing; consumer sustainability perceptions; corporate waste disclosure", "decisionMaker": "Consumers evaluating companies’ production practices", "scIssue": "The study examines how consumers evaluate production inefficiencies framed as wasteful resource use versus wasteful disposal. It demonstrates that consumers are less sensitive to wasteful resource use due to lower perceived environmental harm, with implications for sustainability communication and waste mitigation strategies.", "waterCentral": "No", "waterFocus": "Not explicitly stated in the paper", "methodology": "Behavioral Experiment; Empirical Analysis (gathered data)"}, {"idx": 34, "doi": "https://doi.org/10.1111/poms.12760", "journal": "Production and Operations Management", "date": "November-2017", "title": "Estimation of Deprivation Level Functions Using a Numerical Rating Scale", "abstract": "Evaluating and quantifying human suffering in humanitarian operations offers an innovative and potentially powerful way to assess the performance of humanitarian logistics (HL) and help build optimization models. Previous studies have suggested deprivation cost as a metric and have estimated deprivation cost functions for water using willingness-to-pay. Our study proposes deprivation levels, defined as the degree of human suffering caused by lack of access to a good or service, and estimates deprivation level functions using a numerical rating scale. Analyzing data collected from respondents with and without disaster experience, we find that individuals in the latter category estimate deprivation differently from the beneficiaries of disaster relief. Our study demonstrates that deprivation levels can be expressed as logistic growth functions with a typical S-shape, and that these can be integrated into HL optimization models to better account for human suffering.", "keywords": "humanitarian logistics; human suffering; deprivation level; numerical rating scale; disaster response; water deprivation", "geography": "Not explicitly stated in the paper", "industry": "Humanitarian logistics; post-disaster relief operations; deprivation modeling", "decisionMaker": "Humanitarian logistics planners; disaster relief decision makers", "scIssue": "The study develops deprivation level functions to quantify human suffering from lack of relief supplies (e.g., water) and integrates them into humanitarian logistics optimization models. It analytically improves allocation decisions by incorporating time-dependent suffering into supply chain objectives.", "waterCentral": "Yes", "waterFocus": "Water Infrastructure & Access Supply Chains", "methodology": "Empirical Analysis (gathered data); Analytical Model"}, {"idx": 35, "doi": "https://doi.org/10.1177/0022242920920859", "journal": "Journal of Marketing", "date": "2020", "title": "When Less Is More: How Mindset Influences Consumers’ Responses to Products with Reduced Negative Attributes", "abstract": "Marketing communications often describe a reduction in a product’s negative attributes (e.g., “our mineral water now uses 34% less plastic”). This claim may be interpreted as a trend of improving relative to previous state. However, such a claim may also call attention to a negative product feature that might have otherwise been overlooked. The authors suggest that whether consumers are positively or negatively influenced by such claims depends on whether the claims are interpreted through an incremental or entity mindset. When a reduction in negative attributes is viewed through an incremental mindset—the tendency to think of attributes as malleable—a trend-based interpretation results in improved product evaluations. In contrast, an entity mindset that emphasizes attributes are unlikely to change produces a negative effect for the claim. Four experiments and a field survey (N = 2,543) across food, pharmaceuticals, and plastic bottle products confirm the effects and indicate that the effects diminish when consumers believe the attribute is easy to eliminate or when the attribute has extremely threatening consequences. The opposite is observed for claims of reduced positive attributes, such that an entity mindset produces more positive evaluations. The findings offer marketers consumer insights to guide the communication of negatively framed attributes.", "keywords": "attribute framing; incremental mindset; reduced negative attribute; sustainability communication; consumer evaluation", "geography": "Not explicitly stated in the paper", "industry": "Marketing communications; sustainability claims; consumer product evaluation", "decisionMaker": "Consumers evaluating product claims", "scIssue": "The study examines how consumers interpret claims of reduced negative attributes (e.g., less plastic use) and how mindset moderates responses. It analytically explains when sustainability-related supply chain improvements translate into favorable consumer evaluations.", "waterCentral": "No", "waterFocus": "Not explicitly stated in the paper", "methodology": "Behavioral Experiment; Empirical Analysis (gathered data)"}, {"idx": 36, "doi": "https://doi.org/10.1111/poms.14016", "journal": "Production and Operations Management", "date": "2023", "title": "Improving Drinking Water Access and Equity in Rural Sub-Saharan Africa", "abstract": "In 2021, access to clean drinking water was still a luxury for millions of people worldwide. Building new water projects, such as handpumps and small piped systems, is the primary operational response by many nongovernmental organizations (NGOs) to bring people their first access to clean water in rural areas of developing countries. Based on knowledge gained from our collaboration with a local NGO and an international NGO and field research in Ethiopia, our research studies where to build new water projects optimally. We first develop a decentralized water project location optimization model based on current practice of a decentralized decision-making and project management system and an equal per-beneficiary budget. We further propose three new models to improve both water access and equity: a minimax model, an equitable budget model, and a centralized model that leverages the existing community involvement. Through numerical studies, we compare the model solutions and generate recommendations for NGOs. Lastly, motivated by the current civil war in Ethiopia, we develop a stochastic model to study how to improve drinking water access while mitigating the negative impact of water project supply shocks such as war. Our work studies the previously overlooked problem of drinking water access in rural areas of developing countries. It provides a generalizable and scalable methodology and managerial insights to NGOs building new water projects by combining large geo-coded datasets and field data.", "keywords": "drinking water access; rural SSA; humanitarian operations; equity; stochastic optimization", "geography": "Ethiopia (Tigray region), Sub-Saharan Africa", "industry": "Humanitarian water infrastructure; NGO development operations", "decisionMaker": "NGOs; humanitarian planners; community managers", "scIssue": "The study optimizes the location of rural water infrastructure projects under budget and feasibility constraints to improve both water access and equity. It integrates community involvement and stochastic disruption risk into water infrastructure planning decisions.", "waterCentral": "Yes", "waterFocus": "Water Infrastructure & Access Supply Chains", "methodology": "Analytical Model; Empirical Analysis (gathered data)"}, {"idx": 37, "doi": "https://doi.org/10.1287/msom.1120.0414", "journal": "Manufacturing & Service Operations Management", "date": "28-January-2013", "title": "Efficient Distribution of Water Between Head-Reach and Tail-End Farms in Developing Countries", "abstract": "The necessity of surface water for irrigation and its increasing scarcity in developing economies motivate the need for its efficient distribution. The inequity in the distribution of surface water arises because of the relative physical locations of the farms. Head-reach (primary) farms are close to the source, whereas tail-end (secondary) farms are relatively farther. The lack of physical infrastructure implies that water allocated to secondary farms must pass through primary farms. Left to their individual incentives, primary farmers use more than their fair share of water by denying its release to secondary farmers. Such an inequitable sharing results in significantly suboptimal productivity of the farming community as a whole. We propose decentralized, individually rational mechanisms to achieve socially optimal distribution of surface water for a farming community under uncertainty in rainfall, choice of multiple crops, and differing risk-bearing abilities of primary and secondary farmers. We show that the mechanisms can be efficiently computed and highlight the impact of the improved sharing of surface water. We also study the movement of the price of water with its scarcity. Ideas that can help administer the mechanisms in practice are briefly discussed.", "keywords": "surface water irrigation; head-reach and tail-end inequity; decentralized allocation mechanisms; rainfall uncertainty; crop revenue functions; individually rational contracts", "geography": "India", "industry": "Agricultural irrigation systems in developing economies", "decisionMaker": "Primary (head-reach) and secondary (tail-end) farmers; social planner; government third party", "scIssue": "Surface water must flow sequentially through head-reach farms before reaching tail-end farms, creating asymmetric access and incentives for overuse by upstream farmers. This misaligned incentive structure leads to inequitable allocation and suboptimal aggregate agricultural productivity.", "waterCentral": "Yes", "waterFocus": "Water Infrastructure & Access Supply Chains", "methodology": "Analytical Model"}, {"idx": 38, "doi": "https://doi.org/10.1287/msom.2019.0842", "journal": "Manufacturing & Service Operations Management", "date": "3-April-2020", "title": "Designing Hydro Supply Chains for Energy, Food, and Flood", "abstract": "Problem definition: In this paper, we identify the unique challenges and trade-offs in hydro system development for developing countries and provide a supply chain perspective to expand these countries’ hydro networks for energy, irrigation, and flood control. Academic/practical relevance: The interconnected issues of water, energy, food, and flood are among the most formidable challenges faced by developing countries worldwide. The development of hydro systems has the potential to address all these issues simultaneously and thus has been prioritized in the international community to reduce poverty and promote sustainable economic development. Methodology: We develop a new integrated and dynamic modeling framework to capture the conflicts of these issues, explore the synergy among different sectors, and maximize overall benefits. The framework integrates hydro plant location and distribution decisions for both power and water; it endogenizes the budget and thus captures the dynamic interaction between water resource development and economic growth. Results: We derive analytical results in stylized models to develop general insights on the key driving forces and build a decision support model to solve large-scale problems in practice. By applying the model to the case of Pakistan, we provide solutions that outperform common practices in all aspects of energy, irrigation, and flood control. Managerial implications: Our results, both analytical and numerical, provide robust insights into the optimal development strategies on the location, sequence, and mix of hydro projects for developing countries.", "keywords": "hydro supply chains; energy-food-flood nexus; developing countries; hydro plant location and sequencing; endogenous budget; economic growth", "geography": "Pakistan", "industry": "Hydro infrastructure development for energy generation, irrigation, and flood control", "decisionMaker": "Government planners; central government water resource development authorities", "scIssue": "Hydro plants interact along a river basin where water allocation decisions simultaneously affect energy generation, irrigation supply, and flood control across regions. Strategic location, sequencing, and mix of dams and barrages must balance cost efficiency, yield losses, and dynamic budget constraints to maximize long-term economic growth.", "waterCentral": "Yes", "waterFocus": "Water Infrastructure & Access Supply Chains", "methodology": "Analytical Model; Empirical Analysis (gathered data)"}, {"idx": 39, "doi": "https://doi.org/10.1287/msom.2021.0980", "journal": "Manufacturing & Service Operations Management", "date": "9-July-2021", "title": "A Model for Prepositioning Emergency Relief Items Before a Typhoon with an Uncertain Trajectory", "abstract": "Problem definition: We study the problem faced by the Philippine Department of Social Welfare (DSWD) in prepositioning relief items before landfall of an oncoming typhoon whose future outcome (trajectory and wind speed) is uncertain. Academic/practical relevance: The importance of prepositioning was a hard lesson learned from Super Typhoon Haiyan that devastated the Philippines in 2013, when many affected by the typhoon did not have immediate access to food and water. In a typhoon-prone country, it is important to build resilience through an effective prepositioning model. Methodology: By engaging with DSWD, we developed a practically relevant stochastic prepositioning model. The probability models of municipality-level demand and of supply damage are both dependent on the typhoon outcome. A linear mixed effects model is used to estimate the dependence of demand on the typhoon outcome using a large data set that includes the municipality-level impact of West Pacific typhoons during 2008–2019. The model has two objectives motivated from the practical realities of the Philippine network: prioritizing regions with high demand and prepositioning in all affected regions proportional to their total demand. Results: We find that the choice of the demand model significantly impacts the distributed relief items in the Philippine setting where it is challenging to adjust region-level supply after a typhoon. By using the historical data on past typhoons, we show that in this setting, our stochastic demand model provides the best distribution to date of any existing demand models. Managerial implications: There currently exists a gap between theory and practice in the management of relief inventories. We contribute toward bridging this gap by engaging with DSWD to develop a practically relevant relief distribution model. Our work is an effective example of collaboration with government and nongovernment agencies in developing a relief distribution model.", "keywords": "typhoon trajectory uncertainty; humanitarian operations; stochastic prepositioning; relief inventory management; demand forecasting; supply damage modeling", "geography": "Philippines", "industry": "Humanitarian relief supply chains for disaster response", "decisionMaker": "Philippine Department of Social Welfare and Development (DSWD)", "scIssue": "Relief items must be prepositioned across multiple regions before typhoon landfall under uncertainty about trajectory, demand, and supply damage. Limited post-disaster reallocation flexibility requires balancing demand prioritization and proportional fairness in regional allocation decisions.", "waterCentral": "No", "waterFocus": "Not explicitly stated in the paper", "methodology": "Empirical Analysis (gathered data); Analytical Model"}, {"idx": 40, "doi": "https://doi.org/10.1016/j.jom.2016.05.008", "journal": "Journal of Operations Management", "date": "30-June-2016", "title": "Econometric estimation of deprivation cost functions: A contingent valuation experiment", "abstract": "This paper details research to design an estimation process for Deprivation Cost Functions (DCF) using Contingent Valuation, and to apply it econometrically to obtain a DCF for drinkable water. The paper describes both the process and results obtained. The results indicate that deprivation costs for drinkable water have a non-linear relation with deprivation times. The estimated DCFs provide a consistent metric that could be incorporated into humanitarian logistic mathematical models, eliminating the need to use proxy metrics, and providing a better way to assess the impacts of delivery options and actions. The research reported in this paper is the first attempt in the literature to produce estimates of the economic value of human suffering created by the deprivation of a critical supply or service.", "keywords": "deprivation cost functions; contingent valuation; humanitarian logistics; drinkable water; social cost objective functions; econometric modeling", "geography": "Not explicitly stated in the paper", "industry": "Humanitarian logistics and disaster response", "decisionMaker": "Humanitarian logistics planners; relief agencies; policymakers allocating scarce relief resources", "scIssue": "Relief allocation decisions must account for the escalating human suffering caused by delays in delivering critical supplies such as potable water. Without a quantified deprivation cost function, humanitarian supply chains rely on proxy metrics that fail to capture nonlinear social costs over time.", "waterCentral": "Yes", "waterFocus": "Water as an Embedded Input", "methodology": "Empirical Analysis (gathered data); Analytical Model"}, {"idx": 41, "doi": "https://doi.org/10.1002/joom.1255", "journal": "Journal of Operations Management", "date": "5-April-2023", "title": "Can mass customization slow fast fashion down? The impact on time-to-disposal and willingness-to-pay", "abstract": "We experimentally investigate whether mass customization enhances sustainability and firm outcomes in a fast fashion context. Fast fashion delivers fashion trends to consumers quickly and cheaply but has detrimental effects on the environment (e.g., waste accumulation, water pollution). To mitigate these harmful effects, we examine how different points of customer involvement in mass customization affect the anticipated number of months to product disposal and willingness-to-pay for mass-customized products. We employ a series of experiments and find that consumer perceptions of the degree of customization increase as the point of customer involvement shifts upstream from Use to Assembly to Fabrication to Design and that the anticipated number of months to disposal and willingness-to-pay increase as the point of customer involvement shifts upstream to Design. We also find that the implementation of customer involvement in mass customization matters. Overall, these results provide evidence that mass customization via Design may not only help slow fast fashion down, which has major sustainability implications, but it may also present a win-win opportunity for both the environment and firms (in terms of the bottom line—provided, of course, that it does not have any major cost disadvantages).", "keywords": "fast fashion; mass customization; point of customer involvement; time-to-disposal; willingness-to-pay; sustainability", "geography": "Not explicitly stated in the paper", "industry": "Fashion supply chains and sustainability", "decisionMaker": "Fashion firms designing mass customization systems; consumers choosing customization levels", "scIssue": "Fast fashion supply chains generate excessive waste due to short product lifecycles and rapid turnover. Shifting the point of customer involvement upstream in mass customization can extend product lifespans and increase willingness-to-pay, potentially aligning environmental sustainability with firm profitability.", "waterCentral": "No", "waterFocus": "Not explicitly stated in the paper", "methodology": "Behavioral Experiment"}, {"idx": 42, "doi": "https://doi.org/10.1111/poms.13317", "journal": "Production and Operations Management", "date": "March-2021", "title": "A Tale of Two Food Chains: The Duality of Practices on Well-being", "abstract": "In this paper, we honor Stanford University Professor Hau Lee, who is a great inspiration and thought leader in the supply chain and operations management (SC&OM) field. Our discussion centers around one of the most challenging SC&OM problems—food production, distribution, and consumption from dirt to table. We advocate and link our notions of emergent regenerative, organic food value chains (ROFVC) with quadruple-aim performance (QAP) that connects financial outcomes with ecological, human, and socioeconomic well-being. To do so, we first overview the systemic problems underlying the conventional food supply chains (CFSC) that render them unsustainable in the long run. In contrast, we introduce salient distinctions between CFSC and the new paradigm of ROFVC that uphold QAP. We believe the ideas generated in this paper can move the food systems’ SC&OM design, implementation, and performance measurement from an efficiency-oriented industrial paradigm of large-scale, factory farming toward a more encompassing view of eco-responsible practices. In CFSC, the many hidden costs are cumulative and have broad deleterious consequences; however, in ROFVC, pollution is shunned and “taxed,” and sustainability, as a public good, is rewarded by sequestering greenhouse gas (GHG) emissions and maintaining biodiversity, living soil, as well as clean air and water. We conclude with research, teaching, and policy agendas. We believe that the underlying principles here cut across sectors by fostering the introduction of regenerative business models that take a system’s view in capturing QAP in their value chain strategy and execution.", "keywords": "regenerative organic food value chains; conventional food supply chains; quadruple-aim performance; ecological sustainability; food system design; value chain innovation", "geography": "United States", "industry": "Food production and agricultural supply chains", "decisionMaker": "Farmers; agribusiness firms; policymakers; supply chain designers", "scIssue": "Conventional food supply chains prioritize efficiency and scale but generate hidden ecological and socioeconomic costs, including pollution and climate impacts. Transitioning to regenerative, organic value chains aligns financial performance with ecological restoration and long-term system resilience.", "waterCentral": "Yes", "waterFocus": "Water as a Polluted Output", "methodology": "Analytical Model"}];
+const PLACEHOLDER = "Not explicitly stated in the paper";
+
+function isEmpty(v){ return !v || v.trim() === PLACEHOLDER || v.trim() === ""; }
+function display(v){ return isEmpty(v) ? "Not specified" : v; }
+function esc(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+// ── Build stats ──
+function buildStats(){
+  const waterYes = DATA.filter(a=>a.waterCentral==="Yes").length;
+  const journals = new Set(DATA.map(a=>a.journal).filter(v=>!isEmpty(v))).size;
+  const stats = [
+    { num: DATA.length, label: "Articles", color: "#3ddc84" },
+    { num: waterYes, label: "Water-Central", color: "#7ecfed" },
+    { num: DATA.length - waterYes, label: "Water Peripheral", color: "#ffbe0b" },
+    { num: journals, label: "Journals", color: "#ff6b9d" },
+  ];
+  const row = document.getElementById("statsRow");
+  stats.forEach(s=>{
+    row.innerHTML += `
+      <div class="stat-chip">
+        <span class="stat-dot" style="background:${s.color}; box-shadow:0 0 8px ${s.color}55"></span>
+        <div>
+          <div class="stat-num" style="color:${s.color}">${s.num}</div>
+          <div class="stat-label">${s.label}</div>
+        </div>
+      </div>`;
+  });
+}
+
+// ── Build filter dropdowns ──
+function buildFilters(){
+  const journals=[...new Set(DATA.map(a=>a.journal).filter(v=>!isEmpty(v)))].sort();
+  const wFocuses=[...new Set(DATA.map(a=>a.waterFocus).filter(v=>!isEmpty(v)))].sort();
+  const methods=[...new Set(DATA.flatMap(a=>a.methodology.split(";").map(m=>m.trim())).filter(v=>!isEmpty(v)))].sort();
+
+  const jSel=document.getElementById("filterJournal");
+  journals.forEach(j=>{ const o=document.createElement("option"); o.value=j; o.textContent=j; jSel.appendChild(o); });
+
+  const wfSel=document.getElementById("filterWaterFocus");
+  wFocuses.forEach(w=>{ const o=document.createElement("option"); o.value=w; o.textContent=w; wfSel.appendChild(o); });
+
+  const mSel=document.getElementById("filterMethod");
+  methods.forEach(m=>{ const o=document.createElement("option"); o.value=m; o.textContent=m; mSel.appendChild(o); });
+
+  ["searchInput","filterJournal","filterWater","filterWaterFocus","filterMethod"].forEach(id=>{
+    document.getElementById(id).addEventListener(id==="searchInput"?"input":"change", render);
+  });
+}
+
+function clearFilters(){
+  ["searchInput"].forEach(id=>{ document.getElementById(id).value=""; });
+  ["filterJournal","filterWater","filterWaterFocus","filterMethod"].forEach(id=>{ document.getElementById(id).value=""; });
+  render();
+}
+
+// ── Filter & render ──
+function render(){
+  const q = document.getElementById("searchInput").value.toLowerCase();
+  const journal = document.getElementById("filterJournal").value;
+  const water = document.getElementById("filterWater").value;
+  const wFocus = document.getElementById("filterWaterFocus").value;
+  const method = document.getElementById("filterMethod").value;
+
+  const filtered = DATA.filter(a=>{
+    if(q){ const hay=[a.title,a.abstract,a.keywords,a.geography,a.industry,a.journal,a.scIssue,a.decisionMaker].join(" ").toLowerCase(); if(!hay.includes(q)) return false; }
+    if(journal && a.journal!==journal) return false;
+    if(water && a.waterCentral!==water) return false;
+    if(wFocus && a.waterFocus!==wFocus) return false;
+    if(method && !a.methodology.includes(method)) return false;
+    return true;
+  });
+
+  document.getElementById("shownCount").textContent = filtered.length;
+  document.getElementById("noResults").style.display = filtered.length===0 ? "block" : "none";
+
+  const grid = document.getElementById("cardGrid");
+  grid.innerHTML = "";
+  filtered.forEach((a,i)=>{ grid.appendChild(makeCard(a,i)); });
+}
+
+// ── Build card ──
+function makeCard(a, i){
+  const el = document.createElement("div");
+  el.className = "card";
+  el.style.animationDelay = Math.min(i*0.04, 0.7)+"s";
+
+  const isWaterYes = a.waterCentral === "Yes";
+  const kwTags = (a.keywords||"").split(";").map(k=>k.trim()).filter(Boolean)
+    .map(k=>`<span class="kw">${esc(k)}</span>`).join("");
+
+  const cid = "c"+i;
+  const hasAbstract = !isEmpty(a.abstract);
+  const isLong = hasAbstract && a.abstract.length > 350;
+
+  const waterCentralDisplay = isEmpty(a.waterCentral) ? "Not specified" : a.waterCentral;
+  const waterCentralClass = isWaterYes ? "water-yes-val" : isEmpty(a.waterCentral) ? "empty" : "water-no-val";
+
+  el.innerHTML = `
+    <div class="card-accent ${isWaterYes?'':'water-no'}"></div>
+    <div class="card-head">
+      <div>
+        <div class="card-index">ARTICLE ${String(a.idx).padStart(2,"0")}</div>
+        <div class="card-title">${esc(a.title)}</div>
+        <div class="card-byline">
+          ${!isEmpty(a.journal)?`<span class="journal-badge">${esc(a.journal)}</span>`:""}
+          ${!isEmpty(a.date)?`<span class="date-badge">${esc(a.date)}</span>`:""}
+        </div>
+      </div>
+      ${!isEmpty(a.doi)?`
+      <a class="doi-link" href="${esc(a.doi)}" target="_blank" rel="noopener">
+        DOI
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      </a>`:""}
+    </div>
+    <div class="card-body">
+
+      ${hasAbstract?`
+      <div class="abstract-block">
+        <div class="block-label">Abstract</div>
+        <div class="abstract-text ${isLong?"clamped":""}" id="abs-${cid}">${esc(a.abstract)}</div>
+        ${isLong?`<button class="read-toggle" onclick="toggleAbs('abs-${cid}',this)">[ expand ]</button>`:""}
+      </div>`:""}
+
+      ${kwTags?`
+      <div>
+        <div class="block-label">Keywords</div>
+        <div class="kw-row">${kwTags}</div>
+      </div>`:""}
+
+      <div class="data-grid">
+        <div class="data-cell">
+          <div class="cell-label">Geography</div>
+          <div class="cell-val ${isEmpty(a.geography)?"empty":""}">${esc(display(a.geography))}</div>
+        </div>
+        <div class="data-cell">
+          <div class="cell-label">Industry / Context</div>
+          <div class="cell-val ${isEmpty(a.industry)?"empty":""}">${esc(display(a.industry))}</div>
+        </div>
+        <div class="data-cell">
+          <div class="cell-label">Focal Decision Maker(s)</div>
+          <div class="cell-val ${isEmpty(a.decisionMaker)?"empty":""}">${esc(display(a.decisionMaker))}</div>
+        </div>
+        <div class="data-cell water">
+          <div class="cell-label">Is Water a Central Issue?</div>
+          <div class="cell-val ${waterCentralClass}">${esc(waterCentralDisplay)}</div>
+        </div>
+        <div class="data-cell water">
+          <div class="cell-label">Focus of Water in SC</div>
+          <div class="cell-val ${isEmpty(a.waterFocus)?"empty":""}">${esc(display(a.waterFocus))}</div>
+        </div>
+      </div>
+
+      ${!isEmpty(a.scIssue)?`
+      <div class="sc-block">
+        <div class="block-label">Supply Chain Issue</div>
+        <div class="sc-val">${esc(a.scIssue)}</div>
+      </div>`:""}
+
+      ${!isEmpty(a.methodology)?`
+      <div class="method-block">
+        <div class="method-icon-wrap">🔬</div>
+        <div>
+          <div class="block-label">Research Methodology</div>
+          <div class="method-val">${esc(a.methodology)}</div>
+        </div>
+      </div>`:""}
+
+    </div>
+  `;
+  return el;
+}
+
+function toggleAbs(id, btn){
+  const el = document.getElementById(id);
+  el.classList.toggle("clamped");
+  btn.textContent = el.classList.contains("clamped") ? "[ expand ]" : "[ collapse ]";
+}
+
+buildStats();
+buildFilters();
+render();
+</script>
+</body>
+</html>
