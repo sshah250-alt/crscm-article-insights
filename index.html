@@ -884,6 +884,18 @@ async function boot() {
     }
 
     ALL_COLS = Object.keys(raw[0]);
+    console.log("📋 Columns received from Google Sheet:", ALL_COLS);
+    console.log("✍️ Author column detected as:", KNOWN.authors);
+
+    // ── Auto-detect author column name (case-insensitive, flexible matching) ──
+    const authorCol = ALL_COLS.find(col => {
+      const c = col.toLowerCase();
+      return c.includes("author") || c.includes("author(s)") || c.includes("authors");
+    });
+    if (authorCol && authorCol !== KNOWN.authors) {
+      KNOWN.authors = authorCol;
+      KNOWN_HEADERS.add(authorCol);
+    }
     DATA = processRows(raw);
     showLoader(false);
     buildStats();
