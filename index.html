@@ -709,6 +709,7 @@ footer {
     <select id="filterWater"><option value="">All Articles</option><option value="Yes">Water Central</option><option value="No">Water Not Central</option></select>
     <select id="filterWaterFocus"><option value="">All Water Focus</option></select>
     <select id="filterMethod"><option value="">All Methodologies</option></select>
+    <div id="dynFilters" style="display:contents"></div>
     <button class="clear-btn" onclick="clearFilters()">Clear filters</button>
   </div>
 </div>
@@ -758,14 +759,16 @@ footer {
 
 <script>
 // ─────────────────────────────────────────────────────────────
-//  CONFIG — paste your Google Apps Script Web App URL here
+//  CONFIG — Apps Script Web App URL
 // ─────────────────────────────────────────────────────────────
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwMbNwO5A_VY9c0Cto9omdlU0nPOfNFjQZ0jOrf3mz1dj71GGc0vz6RNaYPvtuiOInqcg/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx4_WMmB4jCp4OS1WXvDVZlGMwmHSU-Mz9lf-wRJdx4YCoXe8zlJtUtTFjGZo-_AfRX/exec";
 
 // ─────────────────────────────────────────────────────────────
-//  COLUMN MAP  (must match your sheet headers exactly)
+//  KNOWN COLUMNS — these get special styled rendering.
+//  Any column NOT in this list is auto-detected and shown
+//  in the info grid automatically — no code changes needed.
 // ─────────────────────────────────────────────────────────────
-const COL = {
+const KNOWN = {
   doi:           "DOI link",
   journal:       "Journal Name",
   date:          "Date Published",
@@ -781,11 +784,28 @@ const COL = {
   methodology:   "Research Methodology",
 };
 
+// All known header strings (for auto-detection logic)
+const KNOWN_HEADERS = new Set(Object.values(KNOWN));
+
 const PLACEHOLDER = "Not explicitly stated in the paper";
-let DATA = [];
+let DATA     = [];
+let ALL_COLS = []; // all column headers from sheet, in order
 
 // ─────────────────────────────────────────────────────────────
-//  BOOT — fetch data then initialise UI
+//  HELPERS
+// ─────────────────────────────────────────────────────────────
+function s(v)       { return (v === null || v === undefined) ? "" : String(v).trim(); }
+function isEmpty(v) { return !v || v.trim() === PLACEHOLDER || v.trim() === ""; }
+function display(v) { return isEmpty(v) ? "Not specified" : v; }
+function esc(v)     { return String(v||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+// Detect if a column is a "Yes/No central issue" type column
+function isYesNoCol(header) {
+  return /is .+ a central issue/i.test(header) || /central issue/i.test(header);
+}
+
+// ─────────────────────────────────────────────────────────────
+//  BOOT
 // ─────────────────────────────────────────────────────────────
 async function boot() {
   showLoader(true);
@@ -793,6 +813,11 @@ async function boot() {
     const res = await fetch(APPS_SCRIPT_URL);
     if (!res.ok) throw new Error("HTTP " + res.status);
     const raw = await res.json();
+    if (!raw || !raw.length) throw new Error("Sheet returned no data.");
+
+    // Capture ALL column headers from first row
+    ALL_COLS = Object.keys(raw[0]);
+
     DATA = processRows(raw);
     showLoader(false);
     buildStats();
@@ -803,37 +828,30 @@ async function boot() {
   }
 }
 
+// ─────────────────────────────────────────────────────────────
+//  PROCESS ROWS — deduplicate, safe-cast all values to strings
+// ─────────────────────────────────────────────────────────────
 function processRows(raw) {
-  // Deduplicate by DOI+Title
   const seen = new Set();
-  const out = [];
+  const out  = [];
   let idx = 1;
   for (const r of raw) {
-    const key = (r[COL.doi]||"").trim() + "|||" + (r[COL.title]||"").trim();
-    if (seen.has(key) || !((r[COL.doi]||"").trim() || (r[COL.title]||"").trim())) continue;
+    const doiVal   = s(r[KNOWN.doi]);
+    const titleVal = s(r[KNOWN.title]);
+    const key = doiVal + "|||" + titleVal;
+    if (seen.has(key) || !(doiVal || titleVal)) continue;
     seen.add(key);
-    out.push({
-      idx:           idx++,
-      doi:           (r[COL.doi]           || "").trim(),
-      journal:       (r[COL.journal]        || "").trim(),
-      date:          (r[COL.date]           || "").trim(),
-      title:         (r[COL.title]          || "").trim(),
-      abstract:      (r[COL.abstract]       || "").trim(),
-      keywords:      (r[COL.keywords]       || "").trim(),
-      geography:     (r[COL.geography]      || "").trim(),
-      industry:      (r[COL.industry]       || "").trim(),
-      decisionMaker: (r[COL.decisionMaker]  || "").trim(),
-      scIssue:       (r[COL.scIssue]        || "").trim(),
-      waterCentral:  (r[COL.waterCentral]   || "").trim(),
-      waterFocus:    (r[COL.waterFocus]     || "").trim(),
-      methodology:   (r[COL.methodology]    || "").trim(),
-    });
+
+    // Store ALL columns (including any new ones) as string values
+    const row = { _idx: idx++ };
+    ALL_COLS.forEach(col => { row[col] = s(r[col]); });
+    out.push(row);
   }
   return out;
 }
 
 // ─────────────────────────────────────────────────────────────
-//  LOADER / ERROR STATES
+//  LOADER / ERROR
 // ─────────────────────────────────────────────────────────────
 function showLoader(visible) {
   document.getElementById("loaderState").style.display  = visible ? "block" : "none";
@@ -849,198 +867,248 @@ function showError(msg) {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  HELPERS
-// ─────────────────────────────────────────────────────────────
-function isEmpty(v){ return !v || v.trim() === PLACEHOLDER || v.trim() === ""; }
-function display(v){ return isEmpty(v) ? "Not specified" : v; }
-function esc(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
-
-// ─────────────────────────────────────────────────────────────
 //  STATS
 // ─────────────────────────────────────────────────────────────
-function buildStats(){
-  const waterYes = DATA.filter(a=>a.waterCentral==="Yes").length;
-  const journals = new Set(DATA.map(a=>a.journal).filter(v=>!isEmpty(v))).size;
+function buildStats() {
+  const waterYes = DATA.filter(a => a[KNOWN.waterCentral] === "Yes").length;
+  const journals = new Set(DATA.map(a => a[KNOWN.journal]).filter(v => !isEmpty(v))).size;
   const stats = [
-    { num: DATA.length,             label: "Articles",        color: "#3ddc84" },
-    { num: waterYes,                label: "Water-Central",   color: "#7ecfed" },
-    { num: DATA.length - waterYes,  label: "Water Peripheral",color: "#ffbe0b" },
-    { num: journals,                label: "Journals",        color: "#ff6b9d" },
+    { num: DATA.length,            label: "Articles",         color: "#3ddc84" },
+    { num: waterYes,               label: "Water-Central",    color: "#7ecfed" },
+    { num: DATA.length - waterYes, label: "Water Peripheral", color: "#ffbe0b" },
+    { num: journals,               label: "Journals",         color: "#ff6b9d" },
   ];
   document.getElementById("headerPill").textContent = DATA.length + " articles";
   const row = document.getElementById("statsRow");
   row.innerHTML = "";
-  stats.forEach(s=>{
+  stats.forEach(st => {
     row.innerHTML += `
       <div class="stat-chip">
-        <span class="stat-dot" style="background:${s.color};box-shadow:0 0 8px ${s.color}55"></span>
+        <span class="stat-dot" style="background:${st.color};box-shadow:0 0 8px ${st.color}55"></span>
         <div>
-          <div class="stat-num" style="color:${s.color}">${s.num}</div>
-          <div class="stat-label">${s.label}</div>
+          <div class="stat-num" style="color:${st.color}">${st.num}</div>
+          <div class="stat-label">${st.label}</div>
         </div>
       </div>`;
   });
 }
 
 // ─────────────────────────────────────────────────────────────
-//  FILTERS
+//  FILTERS — static known ones + auto-generated Yes/No filters
+//  for any new "Is X a Central Issue?" columns
 // ─────────────────────────────────────────────────────────────
-function buildFilters(){
-  const journals = [...new Set(DATA.map(a=>a.journal).filter(v=>!isEmpty(v)))].sort();
-  const wFocuses = [...new Set(DATA.map(a=>a.waterFocus).filter(v=>!isEmpty(v)))].sort();
-  const methods  = [...new Set(DATA.flatMap(a=>a.methodology.split(";").map(m=>m.trim())).filter(v=>!isEmpty(v)))].sort();
+function buildFilters() {
+  const journals = [...new Set(DATA.map(a => a[KNOWN.journal]).filter(v => !isEmpty(v)))].sort();
+  const wFocuses = [...new Set(DATA.map(a => a[KNOWN.waterFocus]).filter(v => !isEmpty(v)))].sort();
+  const methods  = [...new Set(DATA.flatMap(a => (a[KNOWN.methodology]||"").split(";").map(m => m.trim())).filter(v => !isEmpty(v)))].sort();
 
   const jSel  = document.getElementById("filterJournal");
   const wfSel = document.getElementById("filterWaterFocus");
   const mSel  = document.getElementById("filterMethod");
 
-  // Reset to just the placeholder option before repopulating
   jSel.innerHTML  = '<option value="">All Journals</option>';
   wfSel.innerHTML = '<option value="">All Water Focus</option>';
   mSel.innerHTML  = '<option value="">All Methodologies</option>';
 
-  journals.forEach(j=>{ const o=document.createElement("option"); o.value=j; o.textContent=j; jSel.appendChild(o); });
-  wFocuses.forEach(w=>{ const o=document.createElement("option"); o.value=w; o.textContent=w; wfSel.appendChild(o); });
-  methods.forEach(m=>{  const o=document.createElement("option"); o.value=m; o.textContent=m; mSel.appendChild(o); });
+  journals.forEach(j => { const o = document.createElement("option"); o.value=j; o.textContent=j; jSel.appendChild(o); });
+  wFocuses.forEach(w => { const o = document.createElement("option"); o.value=w; o.textContent=w; wfSel.appendChild(o); });
+  methods.forEach(m  => { const o = document.createElement("option"); o.value=m; o.textContent=m; mSel.appendChild(o); });
+
+  // Auto-generate Yes/No filter dropdowns for any new "Is X a Central Issue?" columns
+  const extraCols = ALL_COLS.filter(col => isYesNoCol(col) && col !== KNOWN.waterCentral);
+  const dynArea = document.getElementById("dynFilters");
+  dynArea.innerHTML = "";
+  extraCols.forEach(col => {
+    const sel = document.createElement("select");
+    sel.dataset.col = col;
+    sel.innerHTML = `<option value="">All: ${esc(col)}</option><option value="Yes">Yes — ${esc(col)}</option><option value="No">No — ${esc(col)}</option>`;
+    sel.addEventListener("change", render);
+    dynArea.appendChild(sel);
+  });
 }
 
-function clearFilters(){
+function clearFilters() {
   document.getElementById("searchInput").value = "";
-  ["filterJournal","filterWater","filterWaterFocus","filterMethod"].forEach(id=>{
+  ["filterJournal","filterWater","filterWaterFocus","filterMethod"].forEach(id => {
     document.getElementById(id).value = "";
   });
+  document.querySelectorAll("#dynFilters select").forEach(s => s.value = "");
   render();
 }
 
 // ─────────────────────────────────────────────────────────────
 //  RENDER
 // ─────────────────────────────────────────────────────────────
-function render(){
+function render() {
   const q       = document.getElementById("searchInput").value.toLowerCase();
   const journal = document.getElementById("filterJournal").value;
   const water   = document.getElementById("filterWater").value;
   const wFocus  = document.getElementById("filterWaterFocus").value;
   const method  = document.getElementById("filterMethod").value;
 
-  const filtered = DATA.filter(a=>{
-    if(q){ const hay=[a.title,a.abstract,a.keywords,a.geography,a.industry,a.journal,a.scIssue,a.decisionMaker].join(" ").toLowerCase(); if(!hay.includes(q)) return false; }
-    if(journal && a.journal!==journal) return false;
-    if(water   && a.waterCentral!==water) return false;
-    if(wFocus  && a.waterFocus!==wFocus) return false;
-    if(method  && !a.methodology.includes(method)) return false;
+  // Collect any dynamic Yes/No filters
+  const dynSelects = [...document.querySelectorAll("#dynFilters select")];
+
+  const filtered = DATA.filter(a => {
+    if (q) {
+      // Search across ALL column values
+      const hay = ALL_COLS.map(c => a[c] || "").join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (journal && a[KNOWN.journal] !== journal) return false;
+    if (water   && a[KNOWN.waterCentral] !== water) return false;
+    if (wFocus  && a[KNOWN.waterFocus] !== wFocus) return false;
+    if (method  && !(a[KNOWN.methodology]||"").includes(method)) return false;
+    // Dynamic filters
+    for (const sel of dynSelects) {
+      if (sel.value && a[sel.dataset.col] !== sel.value) return false;
+    }
     return true;
   });
 
   document.getElementById("shownCount").textContent = filtered.length;
-  document.getElementById("noResults").style.display = filtered.length===0 ? "block" : "none";
+  document.getElementById("noResults").style.display = filtered.length === 0 ? "block" : "none";
 
   const grid = document.getElementById("cardGrid");
   grid.innerHTML = "";
-  filtered.forEach((a,i)=>{ grid.appendChild(makeCard(a,i)); });
+  filtered.forEach((a, i) => grid.appendChild(makeCard(a, i)));
 }
 
 // ─────────────────────────────────────────────────────────────
-//  CARD BUILDER
+//  CARD BUILDER — known columns get special styles,
+//  ALL extra columns auto-appear in the info grid
 // ─────────────────────────────────────────────────────────────
-function makeCard(a, i){
+function makeCard(a, i) {
   const el = document.createElement("div");
   el.className = "card";
-  el.style.animationDelay = Math.min(i*0.04, 0.7)+"s";
+  el.style.animationDelay = Math.min(i * 0.04, 0.7) + "s";
 
-  const isWaterYes = a.waterCentral === "Yes";
-  const kwTags = (a.keywords||"").split(";").map(k=>k.trim()).filter(Boolean)
-    .map(k=>`<span class="kw">${esc(k)}</span>`).join("");
+  const isWaterYes    = a[KNOWN.waterCentral] === "Yes";
+  const title         = a[KNOWN.title]        || "";
+  const journal       = a[KNOWN.journal]      || "";
+  const date          = a[KNOWN.date]         || "";
+  const doi           = a[KNOWN.doi]          || "";
+  const abstract      = a[KNOWN.abstract]     || "";
+  const keywords      = a[KNOWN.keywords]     || "";
+  const geography     = a[KNOWN.geography]    || "";
+  const industry      = a[KNOWN.industry]     || "";
+  const decisionMaker = a[KNOWN.decisionMaker]|| "";
+  const scIssue       = a[KNOWN.scIssue]      || "";
+  const waterCentral  = a[KNOWN.waterCentral] || "";
+  const waterFocus    = a[KNOWN.waterFocus]   || "";
+  const methodology   = a[KNOWN.methodology]  || "";
 
-  const cid = "c"+i;
-  const hasAbstract = !isEmpty(a.abstract);
-  const isLong = hasAbstract && a.abstract.length > 350;
-  const waterCentralDisplay = isEmpty(a.waterCentral) ? "Not specified" : a.waterCentral;
-  const waterCentralClass   = isWaterYes ? "water-yes-val" : isEmpty(a.waterCentral) ? "empty" : "water-no-val";
+  const cid      = "c" + i;
+  const isLong   = abstract.length > 350;
+  const kwTags   = keywords.split(";").map(k => k.trim()).filter(Boolean)
+                   .map(k => `<span class="kw">${esc(k)}</span>`).join("");
+  const wCClass  = isWaterYes ? "water-yes-val" : isEmpty(waterCentral) ? "empty" : "water-no-val";
+
+  // ── Extra columns: anything not in KNOWN_HEADERS ──
+  const extraCols = ALL_COLS.filter(col => !KNOWN_HEADERS.has(col));
+
+  const extraCells = extraCols.map(col => {
+    const val  = a[col] || "";
+    const isYN = isYesNoCol(col);
+    const isYes = val === "Yes";
+    const cellClass = isYN ? "data-cell water" : "data-cell";
+    const valClass  = isYN ? (isYes ? "water-yes-val" : isEmpty(val) ? "empty" : "water-no-val")
+                           : (isEmpty(val) ? "cell-val empty" : "cell-val");
+    return `
+      <div class="${cellClass}">
+        <div class="cell-label">${esc(col)}</div>
+        <div class="${isYN ? "cell-val " + valClass : valClass}">${esc(display(val))}</div>
+      </div>`;
+  }).join("");
 
   el.innerHTML = `
-    <div class="card-accent ${isWaterYes?'':'water-no'}"></div>
+    <div class="card-accent ${isWaterYes ? "" : "water-no"}"></div>
     <div class="card-head">
       <div>
-        <div class="card-index">ARTICLE ${String(a.idx).padStart(2,"0")}</div>
-        <div class="card-title">${esc(a.title)}</div>
+        <div class="card-index">ARTICLE ${String(a._idx).padStart(2,"0")}</div>
+        <div class="card-title">${esc(title)}</div>
         <div class="card-byline">
-          ${!isEmpty(a.journal)?`<span class="journal-badge">${esc(a.journal)}</span>`:""}
-          ${!isEmpty(a.date)?`<span class="date-badge">${esc(a.date)}</span>`:""}
+          ${!isEmpty(journal) ? `<span class="journal-badge">${esc(journal)}</span>` : ""}
+          ${!isEmpty(date)    ? `<span class="date-badge">${esc(date)}</span>` : ""}
         </div>
       </div>
-      ${!isEmpty(a.doi)?`
-      <a class="doi-link" href="${esc(a.doi)}" target="_blank" rel="noopener">
+      ${!isEmpty(doi) ? `
+      <a class="doi-link" href="${esc(doi)}" target="_blank" rel="noopener">
         DOI
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-      </a>`:""}
+      </a>` : ""}
     </div>
     <div class="card-body">
-      ${hasAbstract?`
+
+      ${!isEmpty(abstract) ? `
       <div class="abstract-block">
         <div class="block-label">Abstract</div>
-        <div class="abstract-text ${isLong?"clamped":""}" id="abs-${cid}">${esc(a.abstract)}</div>
-        ${isLong?`<button class="read-toggle" onclick="toggleAbs('abs-${cid}',this)">[ expand ]</button>`:""}
-      </div>`:""}
-      ${kwTags?`
+        <div class="abstract-text ${isLong ? "clamped" : ""}" id="abs-${cid}">${esc(abstract)}</div>
+        ${isLong ? `<button class="read-toggle" onclick="toggleAbs('abs-${cid}',this)">[ expand ]</button>` : ""}
+      </div>` : ""}
+
+      ${kwTags ? `
       <div>
         <div class="block-label">Keywords</div>
         <div class="kw-row">${kwTags}</div>
-      </div>`:""}
+      </div>` : ""}
+
       <div class="data-grid">
         <div class="data-cell">
           <div class="cell-label">Geography</div>
-          <div class="cell-val ${isEmpty(a.geography)?"empty":""}">${esc(display(a.geography))}</div>
+          <div class="cell-val ${isEmpty(geography) ? "empty" : ""}">${esc(display(geography))}</div>
         </div>
         <div class="data-cell">
           <div class="cell-label">Industry / Context</div>
-          <div class="cell-val ${isEmpty(a.industry)?"empty":""}">${esc(display(a.industry))}</div>
+          <div class="cell-val ${isEmpty(industry) ? "empty" : ""}">${esc(display(industry))}</div>
         </div>
         <div class="data-cell">
           <div class="cell-label">Focal Decision Maker(s)</div>
-          <div class="cell-val ${isEmpty(a.decisionMaker)?"empty":""}">${esc(display(a.decisionMaker))}</div>
+          <div class="cell-val ${isEmpty(decisionMaker) ? "empty" : ""}">${esc(display(decisionMaker))}</div>
         </div>
         <div class="data-cell water">
           <div class="cell-label">Is Water a Central Issue?</div>
-          <div class="cell-val ${waterCentralClass}">${esc(waterCentralDisplay)}</div>
+          <div class="cell-val ${wCClass}">${esc(display(waterCentral))}</div>
         </div>
         <div class="data-cell water">
           <div class="cell-label">Focus of Water in SC</div>
-          <div class="cell-val ${isEmpty(a.waterFocus)?"empty":""}">${esc(display(a.waterFocus))}</div>
+          <div class="cell-val ${isEmpty(waterFocus) ? "empty" : ""}">${esc(display(waterFocus))}</div>
         </div>
+        ${extraCells}
       </div>
-      ${!isEmpty(a.scIssue)?`
+
+      ${!isEmpty(scIssue) ? `
       <div class="sc-block">
         <div class="block-label">Supply Chain Issue</div>
-        <div class="sc-val">${esc(a.scIssue)}</div>
-      </div>`:""}
-      ${!isEmpty(a.methodology)?`
+        <div class="sc-val">${esc(scIssue)}</div>
+      </div>` : ""}
+
+      ${!isEmpty(methodology) ? `
       <div class="method-block">
         <div class="method-icon-wrap">🔬</div>
         <div>
           <div class="block-label">Research Methodology</div>
-          <div class="method-val">${esc(a.methodology)}</div>
+          <div class="method-val">${esc(methodology)}</div>
         </div>
-      </div>`:""}
+      </div>` : ""}
+
     </div>
   `;
   return el;
 }
 
-function toggleAbs(id, btn){
+function toggleAbs(id, btn) {
   const el = document.getElementById(id);
   el.classList.toggle("clamped");
   btn.textContent = el.classList.contains("clamped") ? "[ expand ]" : "[ collapse ]";
 }
 
-// Attach filter listeners
-["searchInput"].forEach(id=>{
-  document.getElementById(id).addEventListener("input", render);
-});
-["filterJournal","filterWater","filterWaterFocus","filterMethod"].forEach(id=>{
+// Attach static filter listeners
+document.getElementById("searchInput").addEventListener("input", render);
+["filterJournal","filterWater","filterWaterFocus","filterMethod"].forEach(id => {
   document.getElementById(id).addEventListener("change", render);
 });
 
-// Kick off
 boot();
 </script>
 </body>
