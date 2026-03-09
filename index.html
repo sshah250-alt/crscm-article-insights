@@ -374,6 +374,9 @@ main {
   align-items: start;
   border-bottom: 1px solid var(--border);
 }
+.card-head > div:first-child {
+  grid-column: 1;
+}
 .card-index {
   font-family: var(--mono);
   font-size: 0.62rem;
@@ -394,6 +397,63 @@ main {
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+}
+/* ── Author strip ── */
+.card-authors {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.authors-label {
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text-faint);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.authors-label::after {
+  content: '';
+  display: inline-block;
+  width: 16px;
+  height: 1px;
+  background: var(--border2);
+  vertical-align: middle;
+  margin-left: 8px;
+}
+.authors-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.author-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  color: rgba(232,240,236,0.8);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+.author-chip::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--green);
+  opacity: 0.55;
+  flex-shrink: 0;
+}
+.author-chip:not(:last-child)::after {
+  content: '·';
+  color: var(--text-faint);
+  margin-left: 4px;
+  font-size: 0.9rem;
 }
 .journal-badge {
   font-size: 0.7rem;
@@ -782,6 +842,7 @@ const KNOWN = {
   waterCentral:  "Is Water a Central Issue?",
   waterFocus:    "Focus of Water in SC",
   methodology:   "Research Methodology",
+  authors:       "Author(s) Name(s)",
 };
 
 // All known header strings (for auto-detection logic)
@@ -812,12 +873,17 @@ async function boot() {
   try {
     const res = await fetch(APPS_SCRIPT_URL);
     if (!res.ok) throw new Error("HTTP " + res.status);
-    const raw = await res.json();
-    if (!raw || !raw.length) throw new Error("Sheet returned no data.");
+    const json = await res.json();
 
-    // Capture ALL column headers from first row
+    // Handle both old format (array) and new format ({status, rows})
+    const raw = Array.isArray(json) ? json : (json.rows || []);
+
+    if (json.status === "empty" || raw.length === 0) {
+      showError("No published data yet. Open your Google Sheet and click 🚀 CRSCM Publish → Go Live.");
+      return;
+    }
+
     ALL_COLS = Object.keys(raw[0]);
-
     DATA = processRows(raw);
     showLoader(false);
     buildStats();
@@ -997,6 +1063,7 @@ function makeCard(a, i) {
   const waterCentral  = a[KNOWN.waterCentral] || "";
   const waterFocus    = a[KNOWN.waterFocus]   || "";
   const methodology   = a[KNOWN.methodology]  || "";
+  const authors       = a[KNOWN.authors]      || "";
 
   const cid      = "c" + i;
   const isLong   = abstract.length > 350;
@@ -1031,6 +1098,14 @@ function makeCard(a, i) {
           ${!isEmpty(journal) ? `<span class="journal-badge">${esc(journal)}</span>` : ""}
           ${!isEmpty(date)    ? `<span class="date-badge">${esc(date)}</span>` : ""}
         </div>
+        ${!isEmpty(authors) ? `
+        <div class="card-authors">
+          <span class="authors-label">Authors</span>
+          <div class="authors-list">
+            ${authors.split(";").map(a => a.trim()).filter(Boolean)
+              .map(a => `<span class="author-chip">${esc(a)}</span>`).join("")}
+          </div>
+        </div>` : ""}
       </div>
       ${!isEmpty(doi) ? `
       <a class="doi-link" href="${esc(doi)}" target="_blank" rel="noopener">
